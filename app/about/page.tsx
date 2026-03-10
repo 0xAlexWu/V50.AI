@@ -70,7 +70,6 @@ export default async function AboutPage() {
               uri={method.uri}
               address={method.address}
               addressMissingLabel={messages.about.donationAddressMissing}
-              openWalletLabel={messages.about.donationOpenWallet}
               showQrLabel={messages.about.donationShowQr}
               hideQrLabel={messages.about.donationHideQr}
             />

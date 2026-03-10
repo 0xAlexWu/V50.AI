@@ -7,7 +7,6 @@ interface DonationMethodCardProps {
   uri: string;
   address?: string;
   addressMissingLabel: string;
-  openWalletLabel: string;
   showQrLabel: string;
   hideQrLabel: string;
 }
@@ -24,7 +23,6 @@ export function DonationMethodCard({
   uri,
   address,
   addressMissingLabel,
-  openWalletLabel,
   showQrLabel,
   hideQrLabel
 }: DonationMethodCardProps) {
@@ -56,12 +54,6 @@ export function DonationMethodCard({
       {walletUri ? (
         <>
           <div className="mt-2 flex items-center gap-2">
-            <a
-              href={walletUri}
-              className="inline-flex rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-muted"
-            >
-              {openWalletLabel}
-            </a>
             <button
               type="button"
               onClick={() => setShowQr((current) => !current)}
