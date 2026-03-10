@@ -1,4 +1,9 @@
+"use client";
+
+import type { KeyboardEvent, MouseEvent } from "react";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowUpRight, Download, Star } from "lucide-react";
 
 import { AuthorLink } from "@/components/author-link";
@@ -26,19 +31,39 @@ const categoryStyles: Record<string, string> = {
 };
 
 export function SkillCard({ skill, locale = "en", messages }: SkillCardProps) {
+  const router = useRouter();
   const categoryClass = categoryStyles[skill.category] ?? categoryStyles.General;
   const categoryLabel = messages ? getCategoryLabel(skill.category, messages) : skill.category;
   const authorLabel = skill.author ?? skill.namespace ?? messages?.metadata.profileUnavailable ?? "Profile unavailable";
   const authorHandle = getSkillAuthorHandle(skill);
   const stars = getSkillStars(skill);
   const downloads = getSkillDownloads(skill);
+  const detailHref = `/skills/${skill.slug}`;
+
+  const handleArticleClick = (event: MouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("a,button,input,select,textarea,[role='button']")) return;
+    router.push(detailHref);
+  };
+
+  const handleArticleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    router.push(detailHref);
+  };
 
   return (
-    <article className="group flex h-full flex-col rounded-[1.3rem] border border-border bg-card p-5 shadow-soft transition hover:-translate-y-1 hover:shadow-xl">
+    <article
+      role="link"
+      tabIndex={0}
+      onClick={handleArticleClick}
+      onKeyDown={handleArticleKeyDown}
+      className="group flex h-full cursor-pointer flex-col rounded-[1.3rem] border border-border bg-card p-5 shadow-soft transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+    >
       <div className="flex items-start justify-between gap-2">
         <Badge className={categoryClass}>{categoryLabel}</Badge>
         <Link
-          href={`/skills/${skill.slug}`}
+          href={detailHref}
           className="rounded-full p-1.5 text-slate-500 transition hover:bg-muted hover:text-slate-900"
           aria-label={`Open ${skill.name}`}
         >
