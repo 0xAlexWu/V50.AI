@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Iowan Old Style", "Baskerville", "Times New Roman", Times, serif;
+  --background: #f7f6f3;
+  --foreground: #101827;
+  --muted: #ece8df;
+  --border: #ddd7cb;
+  --accent: #16404d;
+  --card: #fcfbf8;
+  --card-foreground: #101827;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 15% -5%, rgba(22, 64, 77, 0.07), transparent 36%),
+    radial-gradient(circle at 90% 0%, rgba(138, 116, 74, 0.08), transparent 28%),
+    var(--background);
+}
+
+body {
+  min-height: 100vh;
+  color: var(--foreground);
+  background: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose-v50 h1,
+.prose-v50 h2,
+.prose-v50 h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.prose-v50 h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+
+.prose-v50 h2 {
+  margin: 1.9rem 0 0.9rem;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+}
+
+.prose-v50 h3 {
+  margin: 1.45rem 0 0.7rem;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+
+.prose-v50 p,
+.prose-v50 li,
+.prose-v50 blockquote,
+.prose-v50 code {
+  line-height: 1.75;
+}
+
+.prose-v50 p {
+  margin: 0.85rem 0;
+  white-space: pre-line;
+}
+
+.prose-v50 ul,
+.prose-v50 ol {
+  margin: 0.9rem 0;
+  padding-left: 1.3rem;
+}
+
+.prose-v50 li + li {
+  margin-top: 0.35rem;
+}
+
+.prose-v50 strong {
+  color: #0b1220;
+}
+
+.prose-v50 a {
+  font-weight: 600;
+}
+
+.prose-v50 mark {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.prose-v50 hr {
+  margin: 1.5rem 0;
+}
+
+.prose-v50 pre {
+  margin: 1rem 0;
+  overflow: auto;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+}
