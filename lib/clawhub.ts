@@ -71,9 +71,53 @@ async function fetchClawHubJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function fetchRegistrySkillsPage(
+  limit = 200,
+  cursor?: string
+): Promise<ClawHubListResponse> {
+  const basePath = `/api/v1/skills?limit=${limit}&sort=updated`;
+  const path = cursor ? `${basePath}&cursor=${encodeURIComponent(cursor)}` : basePath;
+  const data = await fetchClawHubJson<ClawHubListResponse>(path);
+  return {
+    items: data.items ?? [],
+    nextCursor: data.nextCursor ?? null
+  };
+}
+
 export async function fetchRegistrySkills(limit = 200): Promise<ClawHubSkillListItem[]> {
-  const data = await fetchClawHubJson<ClawHubListResponse>(`/api/v1/skills?limit=${limit}&sort=updated`);
+  const data = await fetchRegistrySkillsPage(limit);
   return data.items ?? [];
+}
+
+export interface FetchRegistrySkillsPaginatedOptions {
+  limit?: number;
+  maxPages?: number;
+  maxItems?: number;
+}
+
+export async function fetchRegistrySkillsPaginated({
+  limit = 200,
+  maxPages = 300,
+  maxItems = 60000
+}: FetchRegistrySkillsPaginatedOptions = {}): Promise<ClawHubSkillListItem[]> {
+  const items: ClawHubSkillListItem[] = [];
+  const seenCursors = new Set<string>();
+
+  let cursor: string | undefined;
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await fetchRegistrySkillsPage(limit, cursor);
+    if (!data.items.length) break;
+
+    items.push(...data.items);
+    if (items.length >= maxItems) break;
+
+    if (!data.nextCursor || seenCursors.has(data.nextCursor)) break;
+
+    seenCursors.add(data.nextCursor);
+    cursor = data.nextCursor;
+  }
+
+  return items.slice(0, maxItems);
 }
 
 export async function fetchRegistrySkillDetail(slug: string): Promise<ClawHubSkillDetail | null> {

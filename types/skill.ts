@@ -3,6 +3,7 @@ export type SkillSourceType = "archived_source" | "registry_source" | "repositor
 export type TrustLabel =
   | "Archived Source"
   | "Registry Source"
+  | "Repository Source"
   | "Recently Updated"
   | "Needs Review";
 
@@ -39,4 +40,5 @@ export interface SkillCollection {
   title: string;
   description: string;
   skills: Skill[];
+  totalCount?: number;
 }

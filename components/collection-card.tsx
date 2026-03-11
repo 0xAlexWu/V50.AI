@@ -10,12 +10,14 @@ interface CollectionCardProps {
 }
 
 export function CollectionCard({ collection, locale = "en", messages }: CollectionCardProps) {
+  const liveCount = collection.totalCount ?? collection.skills.length;
+
   return (
     <article className="rounded-[1.4rem] border border-border bg-card p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-xl">
       <h3 className="text-2xl font-semibold text-slate-900">{collection.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">{collection.description}</p>
       <p className="mt-3 text-sm font-semibold text-slate-700">
-        {collection.skills.length.toLocaleString(locale)} {messages?.collections.liveSkills ?? "live skills"}
+        {liveCount.toLocaleString(locale)} {messages?.collections.liveSkills ?? "live skills"}
       </p>
       <Link
         href={`/skills?q=${encodeURIComponent(collection.title.replace(" Skills", ""))}`}

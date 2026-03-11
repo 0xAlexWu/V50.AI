@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
@@ -12,12 +13,12 @@ const siteDescription =
 export const metadata: Metadata = {
   metadataBase: new URL("https://v50.ai"),
   title: {
-    default: "V50.ai | The Skills Store for OpenClaw",
+    default: "V50.ai | The Largest Skills Store for OpenClaw",
     template: "%s | V50.ai"
   },
   description: siteDescription,
   openGraph: {
-    title: "V50.ai | The Skills Store for OpenClaw",
+    title: "V50.ai | The Largest Skills Store for OpenClaw",
     description: siteDescription,
     siteName: "V50.ai",
     type: "website"
@@ -47,6 +48,7 @@ export default async function RootLayout({
           <main className="flex-1 py-8 md:py-12">{children}</main>
           <Footer messages={messages} />
         </div>
+        <Analytics />
       </body>
     </html>
   );

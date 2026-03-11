@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { invalidateSkillsCache } from "@/lib/skills";
 
 export async function POST(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get("secret");
@@ -8,5 +9,6 @@ export async function POST(request: NextRequest) {
   }
 
   revalidateTag("skills");
+  invalidateSkillsCache();
   return NextResponse.json({ revalidated: true, at: new Date().toISOString() });
 }

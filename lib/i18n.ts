@@ -172,7 +172,7 @@ type DeepPartial<T> = {
 
 const en: Messages = {
   nav: {
-    storeTagline: "The Skills Store for OpenClaw",
+    storeTagline: "The Largest Skills Store for OpenClaw",
     home: "Home",
     skills: "Skills",
     collections: "Collections",
@@ -186,7 +186,7 @@ const en: Messages = {
     skillsArchive: "Skills Archive"
   },
   hero: {
-    kicker: "The Skills Store for OpenClaw",
+    kicker: "The Largest Skills Store for OpenClaw",
     title: "Discover real skills with source context, safety signals, and deploy-day clarity.",
     subtitle:
       "V50.ai indexes public OpenClaw skills from real repositories, parses SKILL.md metadata, and presents trust-aware discovery without fabricated ratings or install counts.",
@@ -717,6 +717,7 @@ export function getSourceTypeLabel(sourceType: SkillSourceType, messages: Messag
 export function getTrustLabel(label: TrustLabel, messages: Messages): string {
   if (label === "Archived Source") return messages.skills.archivedSource;
   if (label === "Registry Source") return messages.skills.registrySource;
+  if (label === "Repository Source") return messages.skills.repositorySource;
   if (label === "Recently Updated") return messages.skills.sortRecent;
   return messages.skills.needsReview;
 }

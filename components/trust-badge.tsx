@@ -5,6 +5,7 @@ import type { TrustLabel } from "@/types/skill";
 const trustStyles: Record<TrustLabel, string> = {
   "Archived Source": "border-amber-300 bg-amber-50 text-amber-900",
   "Registry Source": "border-emerald-300 bg-emerald-50 text-emerald-900",
+  "Repository Source": "border-sky-300 bg-sky-50 text-sky-900",
   "Recently Updated": "border-sky-300 bg-sky-50 text-sky-900",
   "Needs Review": "border-rose-300 bg-rose-50 text-rose-900"
 };

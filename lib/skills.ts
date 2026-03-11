@@ -1,9 +1,7 @@
-import { unstable_cache } from "next/cache";
-
 import {
   fetchRegistrySkillDetail,
   fetchRegistrySkillFile,
-  fetchRegistrySkills,
+  fetchRegistrySkillsPaginated,
   type ClawHubSkillListItem
 } from "@/lib/clawhub";
 import { parseSkillMarkdown } from "@/lib/markdown";
@@ -12,16 +10,46 @@ import {
   fetchSkillsTree,
   skillPathToGitHubUrl
 } from "@/lib/github";
+import { fetchSkillsShAll, type SkillsShSkillItem } from "@/lib/skills-sh";
+import { fetchSkillsMpAll, type SkillsMpSkillItem } from "@/lib/skillsmp";
 import { getSkillDownloads, getSkillStars } from "@/lib/skill-signals";
 import { safeDate, toTitleCase, unique } from "@/lib/utils";
 import type { Skill, SkillSourceType, TrustLabel } from "@/types/skill";
 
 const ROOT_SKILL_PATH_RE = /^skills\/[^/]+\/[^/]+\/SKILL\.md$/;
-const MAX_ARCHIVE_SKILLS = Number(process.env.ARCHIVE_SKILLS_FETCH_LIMIT ?? "120");
-const MAX_REGISTRY_SKILLS = Number(process.env.REGISTRY_SKILLS_FETCH_LIMIT ?? "200");
+const MAX_ARCHIVE_SKILLS = Number(process.env.ARCHIVE_SKILLS_FETCH_LIMIT ?? "600");
+const MAX_REGISTRY_SKILLS = Number(process.env.REGISTRY_SKILLS_FETCH_LIMIT ?? "60000");
+const MAX_REGISTRY_PAGES = Number(process.env.REGISTRY_SKILLS_MAX_PAGES ?? "300");
 const REGISTRY_AUTHOR_ENRICH_LIMIT = Number(process.env.REGISTRY_AUTHOR_ENRICH_LIMIT ?? "48");
 const REGISTRY_AUTHOR_ENRICH_CONCURRENCY = Number(process.env.REGISTRY_AUTHOR_ENRICH_CONCURRENCY ?? "6");
+const MAX_SKILLS_SH_SKILLS = Number(process.env.SKILLS_SH_FETCH_LIMIT ?? "200000");
+const MAX_SKILLS_MP_SKILLS = Number(process.env.SKILLSMP_FETCH_LIMIT ?? "300000");
+const ENABLE_SKILLS_SH = process.env.SKILLS_SH_ENABLED !== "false";
+const ENABLE_SKILLS_MP = process.env.SKILLSMP_ENABLED !== "false";
 const RECENT_DAYS = Number(process.env.RECENT_DAYS ?? "30");
+const SKILLS_CACHE_TTL_MS = Number(process.env.SKILLS_CACHE_TTL_MS ?? `${60 * 15 * 1000}`);
+
+interface RuntimeSkillsCache {
+  value?: Skill[];
+  expiresAt: number;
+  inFlight?: Promise<Skill[]>;
+}
+
+declare global {
+  var __v50SkillsCache: RuntimeSkillsCache | undefined;
+}
+
+function getRuntimeSkillsCache(): RuntimeSkillsCache {
+  if (!globalThis.__v50SkillsCache) {
+    globalThis.__v50SkillsCache = {
+      value: undefined,
+      expiresAt: 0,
+      inFlight: undefined
+    };
+  }
+
+  return globalThis.__v50SkillsCache;
+}
 
 interface SkillMetaFile {
   owner?: string;
@@ -149,7 +177,13 @@ function computeTrustLabels(
   updatedAt: Date | undefined,
   needsReview: boolean
 ): TrustLabel[] {
-  const labels: TrustLabel[] = [sourceType === "registry_source" ? "Registry Source" : "Archived Source"];
+  const labels: TrustLabel[] = [
+    sourceType === "registry_source"
+      ? "Registry Source"
+      : sourceType === "archived_source"
+        ? "Archived Source"
+        : "Repository Source"
+  ];
 
   if (updatedAt) {
     const diffDays = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
@@ -214,6 +248,132 @@ function normalizeRegistrySkill(item: ClawHubSkillListItem): Skill {
     downloads: item.stats?.downloads,
     installsCurrent: item.stats?.installsCurrent,
     installsAllTime: item.stats?.installsAllTime,
+    moderationVerdict: undefined
+  };
+}
+
+function isLikelyDomain(value: string): boolean {
+  return !value.includes("/") && /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(value);
+}
+
+function normalizeSlugPart(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function buildSkillsShSkillUrl(item: SkillsShSkillItem): string {
+  const source = item.source.trim().toLowerCase();
+  const skillId = normalizeSlugPart(item.skillId);
+
+  if (source.includes("/")) {
+    const [owner, repo] = source.split("/");
+    if (owner && repo) return `https://skills.sh/${owner}/${repo}/${skillId}`;
+  }
+
+  if (isLikelyDomain(source)) {
+    return `https://skills.sh/site/${source}/${skillId}`;
+  }
+
+  return `https://skills.sh/search?q=${encodeURIComponent(`${item.source} ${item.skillId}`)}`;
+}
+
+function normalizeSkillsShSkill(item: SkillsShSkillItem): Skill | null {
+  const source = item.source.trim();
+  const skillId = item.skillId.trim();
+  const name = item.name.trim() || skillId;
+  if (!source || !skillId || !name) return null;
+
+  const summary =
+    `Indexed from skills.sh (${source}/${skillId}). Upstream summary metadata is limited for this source.`;
+  const category = toTitleCase(parseCategory([], `${name} ${skillId} ${source}`));
+
+  return {
+    id: `skills-sh/${source}/${skillId}`.toLowerCase(),
+    slug: `${source}--${skillId}`
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, ""),
+    registrySlug: undefined,
+    name,
+    summary,
+    description: summary,
+    category,
+    tags: unique(
+      [skillId, ...source.split("/")]
+        .map((token) => token.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+    sourceUrl: buildSkillsShSkillUrl(item),
+    sourceType: "repository_source",
+    author: source.includes("/") ? source.split("/")[0] : source,
+    namespace: source,
+    updatedAt: undefined,
+    version: undefined,
+    trustLabels: computeTrustLabels("repository_source", undefined, true),
+    installationUrl: `https://skills.sh/search?q=${encodeURIComponent(`${source}/${skillId}`)}`,
+    safetyNote:
+      "This listing is imported from skills.sh public index metadata. Review upstream SKILL.md and repository scripts before running.",
+    rawMarkdown: "",
+    markdownBody: "",
+    githubPath: "",
+    githubStars: undefined,
+    downloads: typeof item.installs === "number" ? item.installs : undefined,
+    installsCurrent: undefined,
+    installsAllTime: typeof item.installs === "number" ? item.installs : undefined,
+    moderationVerdict: undefined
+  };
+}
+
+function normalizeSkillsMpSkill(item: SkillsMpSkillItem): Skill | null {
+  const name = item.name?.trim();
+  if (!name) return null;
+
+  const namespace = item.namespace?.trim() || item.author?.trim();
+  const baseSlug =
+    item.slug?.trim() ||
+    `${namespace ?? "skillsmp"}-${name}`
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-");
+  const summary =
+    item.summary?.trim() ||
+    item.description?.trim() ||
+    "Indexed from SkillsMP metadata feed. Upstream detail metadata was not provided.";
+  const tags = unique([...(item.tags ?? []), ...(namespace ? [namespace] : [])].map((tag) => tag.toLowerCase()));
+  const category = toTitleCase(item.category?.trim() || parseCategory(tags, `${name} ${summary}`));
+  const updatedAt = safeDate(item.updatedAt);
+
+  return {
+    id: `skillsmp/${namespace ?? "unknown"}/${baseSlug}`.toLowerCase(),
+    slug: normalizeSlugPart(`skillsmp-${namespace ?? "unknown"}-${baseSlug}`),
+    registrySlug: undefined,
+    name,
+    summary,
+    description: summary,
+    category,
+    tags,
+    sourceUrl:
+      item.sourceUrl?.trim() ||
+      `https://skillsmp.com/search?q=${encodeURIComponent(`${namespace ?? ""} ${name}`.trim())}`,
+    sourceType: "repository_source",
+    author: item.author?.trim(),
+    namespace,
+    updatedAt: updatedAt?.toISOString(),
+    version: undefined,
+    trustLabels: computeTrustLabels("repository_source", updatedAt, true),
+    installationUrl: item.installUrl?.trim() || item.sourceUrl?.trim(),
+    safetyNote:
+      "This listing is imported from SkillsMP metadata and should be treated as untrusted until upstream source review is completed.",
+    rawMarkdown: "",
+    markdownBody: "",
+    githubPath: "",
+    githubStars: item.stars,
+    downloads: item.downloads,
+    installsCurrent: undefined,
+    installsAllTime: item.downloads,
     moderationVerdict: undefined
   };
 }
@@ -481,12 +641,20 @@ async function enrichRegistrySkillsForListing(skills: Skill[]): Promise<Skill[]>
 
 async function fetchRegistrySkillsNormalized(): Promise<Skill[]> {
   try {
-    let items = await fetchRegistrySkills(MAX_REGISTRY_SKILLS);
+    let items = await fetchRegistrySkillsPaginated({
+      limit: 200,
+      maxPages: MAX_REGISTRY_PAGES,
+      maxItems: MAX_REGISTRY_SKILLS
+    });
 
     // ClawHub occasionally returns an empty page transiently; retry once before degrading to archive-only.
     if (items.length === 0) {
       await new Promise((resolve) => setTimeout(resolve, 250));
-      items = await fetchRegistrySkills(MAX_REGISTRY_SKILLS);
+      items = await fetchRegistrySkillsPaginated({
+        limit: 200,
+        maxPages: MAX_REGISTRY_PAGES,
+        maxItems: MAX_REGISTRY_SKILLS
+      });
     }
 
     const normalized = items.map(normalizeRegistrySkill).sort(sortByUpdated);
@@ -496,13 +664,102 @@ async function fetchRegistrySkillsNormalized(): Promise<Skill[]> {
   }
 }
 
+async function fetchSkillsShSkillsNormalized(): Promise<Skill[]> {
+  if (!ENABLE_SKILLS_SH) return [];
+
+  try {
+    const { skills } = await fetchSkillsShAll({ view: "all-time" });
+    return skills
+      .map((item) => normalizeSkillsShSkill(item))
+      .filter((item): item is Skill => Boolean(item))
+      .slice(0, MAX_SKILLS_SH_SKILLS);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchSkillsMpSkillsNormalized(): Promise<Skill[]> {
+  if (!ENABLE_SKILLS_MP) return [];
+
+  try {
+    const { skills } = await fetchSkillsMpAll();
+    return skills
+      .map((item) => normalizeSkillsMpSkill(item))
+      .filter((item): item is Skill => Boolean(item))
+      .slice(0, MAX_SKILLS_MP_SKILLS);
+  } catch {
+    return [];
+  }
+}
+
+function sourcePriority(skill: Skill): number {
+  if (skill.sourceType === "registry_source") return 3;
+  if (skill.sourceType === "repository_source") return 2;
+  return 1;
+}
+
+function canonicalSkillKey(skill: Skill): string {
+  if (skill.registrySlug) return `registry:${skill.registrySlug.toLowerCase()}`;
+
+  const author = (skill.author ?? skill.namespace ?? "").trim().toLowerCase();
+  const name = normalizeSlugPart(skill.name || skill.slug);
+  if (author && name) return `author:${author}::name:${name}`;
+
+  const slug = normalizeSlugPart(skill.slug);
+  if (slug) return `slug:${slug}`;
+
+  return skill.id.toLowerCase();
+}
+
+function shouldReplaceExistingSkill(existing: Skill, candidate: Skill): boolean {
+  const existingPriority = sourcePriority(existing);
+  const candidatePriority = sourcePriority(candidate);
+  if (candidatePriority !== existingPriority) return candidatePriority > existingPriority;
+
+  const existingTime = existing.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+  const candidateTime = candidate.updatedAt ? new Date(candidate.updatedAt).getTime() : 0;
+  return candidateTime > existingTime;
+}
+
+function dedupeAcrossSources(skills: Skill[]): Skill[] {
+  const byKey = new Map<string, Skill>();
+
+  for (const skill of skills) {
+    const key = canonicalSkillKey(skill);
+    const existing = byKey.get(key);
+
+    if (!existing) {
+      byKey.set(key, skill);
+      continue;
+    }
+
+    if (shouldReplaceExistingSkill(existing, skill)) {
+      byKey.set(key, {
+        ...skill,
+        trustLabels: unique([...skill.trustLabels, ...existing.trustLabels])
+      });
+    } else {
+      byKey.set(key, {
+        ...existing,
+        trustLabels: unique([...existing.trustLabels, ...skill.trustLabels])
+      });
+    }
+  }
+
+  return [...byKey.values()];
+}
+
 async function fetchAndNormalizeSkills(): Promise<Skill[]> {
-  const [registryResult, archiveResult] = await Promise.allSettled([
+  const [registryResult, skillsShResult, skillsMpResult, archiveResult] = await Promise.allSettled([
     fetchRegistrySkillsNormalized(),
+    fetchSkillsShSkillsNormalized(),
+    fetchSkillsMpSkillsNormalized(),
     fetchArchiveSkills()
   ]);
 
   const registrySkills = registryResult.status === "fulfilled" ? registryResult.value : [];
+  const skillsShSkills = skillsShResult.status === "fulfilled" ? skillsShResult.value : [];
+  const skillsMpSkills = skillsMpResult.status === "fulfilled" ? skillsMpResult.value : [];
   const archiveSkills = archiveResult.status === "fulfilled" ? archiveResult.value : [];
 
   const registrySlugs = new Set(registrySkills.map((skill) => skill.registrySlug ?? skill.slug));
@@ -510,16 +767,94 @@ async function fetchAndNormalizeSkills(): Promise<Skill[]> {
     (skill) => !skill.registrySlug || !registrySlugs.has(skill.registrySlug)
   );
 
-  return [...registrySkills, ...archiveWithoutDup].sort(sortByUpdated);
+  return dedupeAcrossSources([
+    ...registrySkills,
+    ...skillsShSkills,
+    ...skillsMpSkills,
+    ...archiveWithoutDup
+  ]).sort(sortByUpdated);
 }
 
-const cachedSkills = unstable_cache(fetchAndNormalizeSkills, ["openclaw-skills-catalog-v4"], {
-  revalidate: 60 * 15,
-  tags: ["skills"]
-});
+export function invalidateSkillsCache(): void {
+  const cache = getRuntimeSkillsCache();
+  cache.expiresAt = 0;
+  cache.inFlight = undefined;
+}
+
+export interface SkillsSourceStats {
+  total: number;
+  bySourceType: Record<SkillSourceType, number>;
+  byProvider: {
+    clawhubRegistry: number;
+    openclawArchive: number;
+    skillsSh: number;
+    skillsMp: number;
+  };
+}
 
 export async function getAllSkills(): Promise<Skill[]> {
-  return cachedSkills();
+  const cache = getRuntimeSkillsCache();
+  const now = Date.now();
+
+  if (cache.value && now < cache.expiresAt) {
+    return cache.value;
+  }
+
+  if (cache.inFlight) {
+    return cache.inFlight;
+  }
+
+  cache.inFlight = fetchAndNormalizeSkills()
+    .then((skills) => {
+      cache.value = skills;
+      cache.expiresAt = Date.now() + SKILLS_CACHE_TTL_MS;
+      return skills;
+    })
+    .catch((error) => {
+      if (cache.value) {
+        cache.expiresAt = Date.now() + Math.min(SKILLS_CACHE_TTL_MS, 60 * 1000);
+        return cache.value;
+      }
+
+      throw error;
+    })
+    .finally(() => {
+      cache.inFlight = undefined;
+    });
+
+  return cache.inFlight;
+}
+
+export async function getSkillsSourceStats(): Promise<SkillsSourceStats> {
+  const skills = await getAllSkills();
+
+  const bySourceType: Record<SkillSourceType, number> = {
+    archived_source: 0,
+    registry_source: 0,
+    repository_source: 0
+  };
+
+  const byProvider = {
+    clawhubRegistry: 0,
+    openclawArchive: 0,
+    skillsSh: 0,
+    skillsMp: 0
+  };
+
+  for (const skill of skills) {
+    bySourceType[skill.sourceType] += 1;
+
+    if (skill.id.startsWith("registry/")) byProvider.clawhubRegistry += 1;
+    else if (skill.id.startsWith("archive/")) byProvider.openclawArchive += 1;
+    else if (skill.id.startsWith("skills-sh/")) byProvider.skillsSh += 1;
+    else if (skill.id.startsWith("skillsmp/")) byProvider.skillsMp += 1;
+  }
+
+  return {
+    total: skills.length,
+    bySourceType,
+    byProvider
+  };
 }
 
 export async function getSkillBySlug(slug: string): Promise<Skill | undefined> {

@@ -79,9 +79,21 @@ export async function fetchRepoSignals(): Promise<RepoSignals> {
 }
 
 export async function fetchSkillsTree(): Promise<GitTreeNode[]> {
-  const data = await fetchGitHubJson<GitTreeResponse>(
-    `/repos/${OPENCLAW_SKILLS_REPO.owner}/${OPENCLAW_SKILLS_REPO.repo}/git/trees/${OPENCLAW_SKILLS_REPO.branch}?recursive=1`
+  const response = await fetch(
+    `${GITHUB_API_BASE}/repos/${OPENCLAW_SKILLS_REPO.owner}/${OPENCLAW_SKILLS_REPO.repo}/git/trees/${OPENCLAW_SKILLS_REPO.branch}?recursive=1`,
+    {
+      headers: githubHeaders(),
+      cache: "no-store"
+    }
   );
+
+  if (!response.ok) {
+    throw new Error(
+      `GitHub request failed (${response.status}): /repos/${OPENCLAW_SKILLS_REPO.owner}/${OPENCLAW_SKILLS_REPO.repo}/git/trees/${OPENCLAW_SKILLS_REPO.branch}?recursive=1`
+    );
+  }
+
+  const data = (await response.json()) as GitTreeResponse;
 
   return data.tree;
 }
