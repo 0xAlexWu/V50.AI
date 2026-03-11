@@ -50,9 +50,11 @@ export function SkillRow({ skill, locale = "en", messages }: SkillRowProps) {
       className="cursor-pointer rounded-2xl border border-border bg-card p-4 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-slate-900">{skill.name}</h3>
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h3 className="truncate text-lg font-semibold text-slate-900" title={skill.name}>
+              {skill.name}
+            </h3>
             <SourceBadge sourceType={skill.sourceType} messages={messages} />
           </div>
           <p className="mt-1 text-sm text-slate-600">{skill.summary}</p>

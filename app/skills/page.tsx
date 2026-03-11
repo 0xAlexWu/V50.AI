@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { EmptyState } from "@/components/empty-state";
 import { SearchBar } from "@/components/search-bar";
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
   description: "Search and filter real OpenClaw skills fetched from public sources."
 };
 
+const DEFAULT_PAGE_SIZE = Number(process.env.SKILLS_PAGE_SIZE ?? "48");
+const MAX_PAGE_SIZE = Number(process.env.SKILLS_PAGE_SIZE_MAX ?? "120");
+
 interface SkillsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
@@ -21,6 +25,17 @@ interface SkillsPageProps {
 function first(value: string | string[] | undefined): string | undefined {
   if (Array.isArray(value)) return value[0];
   return value;
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 export default async function SkillsPage({ searchParams }: SkillsPageProps) {
@@ -32,6 +47,8 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
   const signal = first(params.signal) ?? "all";
   const sort = first(params.sort) ?? "recent";
   const view = first(params.view) ?? "grid";
+  const page = parsePositiveInt(first(params.page), 1);
+  const pageSize = clamp(parsePositiveInt(first(params.pageSize), DEFAULT_PAGE_SIZE), 12, MAX_PAGE_SIZE);
 
   const allSkills = await getAllSkills();
   const categories = getCategories(allSkills);
@@ -43,9 +60,31 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
     signal: signal as "all" | "with_stars" | "with_downloads" | "with_both",
     sort: sort as "recent" | "name" | "source" | "stars" | "downloads"
   });
-  const localizedFiltered = await localizeSkillsForLocale(filtered, locale, {
+
+  const totalResults = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+  const currentPage = clamp(page, 1, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalResults);
+  const pagedSkills = filtered.slice(pageStart, pageEnd);
+
+  const localizedPagedSkills = await localizeSkillsForLocale(pagedSkills, locale, {
     includeDescription: false
   });
+
+  const buildPageHref = (targetPage: number): string => {
+    const next = new URLSearchParams();
+    if (q) next.set("q", q);
+    if (category !== "All") next.set("category", category);
+    if (source !== "all") next.set("source", source);
+    if (signal !== "all") next.set("signal", signal);
+    if (sort !== "recent") next.set("sort", sort);
+    if (view !== "grid") next.set("view", view);
+    if (pageSize !== DEFAULT_PAGE_SIZE) next.set("pageSize", String(pageSize));
+    if (targetPage > 1) next.set("page", String(targetPage));
+    const query = next.toString();
+    return query ? `/skills?${query}` : "/skills";
+  };
 
   return (
     <div className="space-y-8">
@@ -62,23 +101,66 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
         messages={messages}
       />
 
-      {filtered.length === 0 ? (
+      {totalResults === 0 ? (
         <EmptyState title={messages.skills.noMatchTitle} description={messages.skills.noMatchDesc} />
+      ) : null}
+
+      {totalResults > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white/72 px-4 py-2 text-sm text-slate-700">
+          <p>
+            Showing {pageStart + 1}-{pageEnd} of {totalResults.toLocaleString(locale)} skills
+          </p>
+          {totalPages > 1 ? (
+            <p>
+              Page {currentPage} / {totalPages}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {view === "list" ? (
         <div className="space-y-3">
-          {localizedFiltered.map((skill) => (
+          {localizedPagedSkills.map((skill) => (
             <SkillRow key={skill.id} skill={skill} locale={locale} messages={messages} />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {localizedFiltered.map((skill) => (
+          {localizedPagedSkills.map((skill) => (
             <SkillCard key={skill.id} skill={skill} locale={locale} messages={messages} />
           ))}
         </div>
       )}
+
+      {totalPages > 1 ? (
+        <nav className="flex flex-wrap items-center justify-center gap-2">
+          <Link
+            href={buildPageHref(currentPage - 1)}
+            aria-disabled={currentPage <= 1}
+            className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+              currentPage <= 1
+                ? "pointer-events-none border-border/50 text-slate-400"
+                : "border-border bg-white text-slate-700 hover:bg-muted"
+            }`}
+          >
+            Previous
+          </Link>
+          <span className="px-2 text-sm text-slate-600">
+            {currentPage} / {totalPages}
+          </span>
+          <Link
+            href={buildPageHref(currentPage + 1)}
+            aria-disabled={currentPage >= totalPages}
+            className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+              currentPage >= totalPages
+                ? "pointer-events-none border-border/50 text-slate-400"
+                : "border-border bg-white text-slate-700 hover:bg-muted"
+            }`}
+          >
+            Next
+          </Link>
+        </nav>
+      ) : null}
     </div>
   );
 }

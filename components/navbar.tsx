@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
 import type { Locale, Messages } from "@/lib/i18n";
@@ -10,6 +13,18 @@ interface NavbarProps {
 }
 
 export function Navbar({ locale, messages }: NavbarProps) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 18);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const links = [
     { href: "/", label: messages.nav.home },
     { href: "/skills", label: messages.nav.skills },
@@ -18,10 +33,20 @@ export function Navbar({ locale, messages }: NavbarProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 -mx-4 border-b border-white/40 bg-background/85 px-4 backdrop-blur-md md:-mx-8 md:px-8">
-      <nav className="flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="rounded-xl bg-accent px-2.5 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white">
+    <header
+      className={`sticky top-0 z-40 -mx-4 border-b px-4 transition-[border-color,backdrop-filter] duration-500 md:-mx-8 md:px-8 ${
+        scrolled ? "border-[#d8d1c6] backdrop-blur-md" : "border-transparent backdrop-blur-0"
+      }`}
+    >
+      <div
+        className={`pointer-events-none absolute inset-0 bg-[rgba(244,238,227,0.92)] transition-opacity duration-500 ${
+          scrolled ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      <nav className="relative z-10 flex h-16 items-center justify-between">
+        <Link href="/" className="group flex items-center gap-2">
+          <span className="relative text-[0.78rem] font-extrabold uppercase tracking-[0.12em] text-[#163540] after:absolute after:-bottom-0.5 after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[#163540] after:transition-transform after:duration-300 group-hover:after:scale-x-100">
             V50.ai
           </span>
           <span className="hidden text-sm text-slate-600 md:inline">{messages.nav.storeTagline}</span>

@@ -71,7 +71,9 @@ export function SkillCard({ skill, locale = "en", messages }: SkillCardProps) {
         </Link>
       </div>
 
-      <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-900">{skill.name}</h3>
+      <h3 className="mt-4 truncate text-xl font-semibold tracking-tight text-slate-900" title={skill.name}>
+        {skill.name}
+      </h3>
       <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{skill.summary}</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
