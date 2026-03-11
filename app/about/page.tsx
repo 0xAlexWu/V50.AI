@@ -4,6 +4,16 @@ import { DonationMethodCard } from "@/components/donation-method-card";
 import { SectionHeader } from "@/components/section-header";
 import { getRequestI18n } from "@/lib/i18n-server";
 
+
+
+
+
+
+
+
+
+
+
 export const metadata: Metadata = {
   title: "About",
   description: "About V50.ai and the trust-aware approach to OpenClaw skill discovery."
