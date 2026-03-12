@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ interface NavbarProps {
 
 export function Navbar({ locale, messages }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [logoBroken, setLogoBroken] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -46,9 +48,21 @@ export function Navbar({ locale, messages }: NavbarProps) {
 
       <nav className="relative z-10 flex h-16 items-center justify-between">
         <Link href="/" className="group flex items-center gap-2">
-          <span className="relative text-[0.78rem] font-extrabold uppercase tracking-[0.12em] text-[#163540] after:absolute after:-bottom-0.5 after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[#163540] after:transition-transform after:duration-300 group-hover:after:scale-x-100">
-            V50.ai
-          </span>
+          {!logoBroken ? (
+            <Image
+              src="/v50-logo.png"
+              alt="V50.AI"
+              width={34}
+              height={34}
+              className="h-8 w-8 rounded-md object-cover"
+              onError={() => setLogoBroken(true)}
+              priority
+            />
+          ) : (
+            <span className="relative text-[0.78rem] font-extrabold uppercase tracking-[0.12em] text-[#163540] after:absolute after:-bottom-0.5 after:left-0 after:h-[2px] after:w-full after:origin-left after:scale-x-0 after:bg-[#163540] after:transition-transform after:duration-300 group-hover:after:scale-x-100">
+              V50.AI
+            </span>
+          )}
           <span className="hidden text-sm text-slate-600 md:inline">{messages.nav.storeTagline}</span>
         </Link>
 

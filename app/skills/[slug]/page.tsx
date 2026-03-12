@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EmptyState } from "@/components/empty-state";
+import { AssistantInstallPrompt } from "@/components/assistant-install-prompt";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { MetadataPanel } from "@/components/metadata-panel";
 import { SafetyNotice } from "@/components/safety-notice";
@@ -61,6 +62,12 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
   });
   const sourceLinkLabel =
     localizedSkill.sourceType === "registry_source" ? messages.detail.openRegistryRecord : messages.detail.openInGithub;
+  const rawInstallSlug = (localizedSkill.registrySlug ?? localizedSkill.slug).trim();
+  const installNamespace = (localizedSkill.namespace ?? localizedSkill.author ?? "").trim();
+  const installTarget =
+    installNamespace && !rawInstallSlug.startsWith(`${installNamespace}/`)
+      ? `${installNamespace}/${rawInstallSlug}`
+      : rawInstallSlug;
 
   return (
     <div className="space-y-8">
@@ -69,6 +76,12 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
         <div className="space-y-6">
           <SafetyNotice note={localizedSkill.safetyNote} title={messages.safety.title} />
+          <AssistantInstallPrompt
+            skillName={localizedSkill.name}
+            installTarget={installTarget}
+            markdownBody={skill.markdownBody || localizedSkill.markdownBody}
+            locale={locale}
+          />
           {localizedSkill.markdownBody ? (
             <MarkdownRenderer markdown={localizedSkill.markdownBody} />
           ) : (

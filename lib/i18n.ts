@@ -349,8 +349,8 @@ const localeOverrides: Record<Locale, DeepPartial<Messages>> = {
     },
     hero: {
       kicker: "OpenClaw 技能商店",
-      title: "发现真实技能，兼顾来源透明、安全信号与上线可用性。",
-      subtitle: "V50.ai 从公开来源抓取真实 OpenClaw 技能，解析 SKILL.md 元数据，并以可信优先方式呈现。",
+      title: "龙虾要聪明，就上V50",
+      subtitle: "让天下龙虾没有难学的技能！\nV50.AI 致力于打造全球最大的龙虾技能商店，已收录超 10 万个 Skills，海量内容实时迭代更新，养虾第一站从这里开始",
       browseSkills: "浏览技能",
       viewCollections: "查看合集",
       liveEntries: "已加载 {count} 条真实技能"

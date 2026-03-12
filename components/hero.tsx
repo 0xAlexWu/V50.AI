@@ -20,14 +20,14 @@ export function Hero({ totalSkills, locale, messages }: HeroProps) {
           <FadeIn>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">{messages.hero.kicker}</p>
           </FadeIn>
-          <h1 className="mt-4 max-w-3xl font-[var(--font-serif)] text-4xl leading-tight text-slate-900 md:text-6xl">
+          <h1 className="mt-5 max-w-3xl font-[var(--font-serif)] text-4xl leading-tight text-slate-900 md:text-6xl">
             <AnimatedWords text={messages.hero.title} delay={0.12} stagger={0.032} />
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-700 md:text-lg">
+          <p className="mt-7 max-w-2xl text-base leading-relaxed text-slate-700 md:text-lg">
             <AnimatedWords text={messages.hero.subtitle} delay={0.4} stagger={0.02} />
           </p>
 
-          <FadeIn delay={0.22} className="mt-8 flex flex-wrap items-center gap-3">
+          <FadeIn delay={0.22} className="mt-9 flex flex-wrap items-center gap-3">
             <Link href="/skills">
               <Button>{messages.hero.browseSkills}</Button>
             </Link>

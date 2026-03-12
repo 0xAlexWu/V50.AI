@@ -7,7 +7,7 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ markdown }: MarkdownRendererProps) {
   return (
-    <article className="prose-v50 rounded-[1.3rem] border border-border bg-transparent p-6 text-slate-700 shadow-soft md:p-8">
+    <article className="prose-v50 rounded-[1.3rem] border border-border bg-card p-6 text-slate-700 shadow-soft md:p-8">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

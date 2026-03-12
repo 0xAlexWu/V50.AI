@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
 export function LobsterClawIllustration() {
@@ -7,56 +8,32 @@ export function LobsterClawIllustration() {
 
   if (reducedMotion) {
     return (
-      <svg
-        viewBox="0 0 360 320"
-        className="h-[330px] w-full"
-        role="img"
-        aria-label="Line-art animated SKILL.md card"
-      >
-        <circle cx="180" cy="160" r="126" fill="#f8f6f0" stroke="#ddd7cb" strokeDasharray="6 8" />
-        <rect x="86" y="104" width="188" height="112" rx="18" fill="#fcfbf8" stroke="#d7d0c2" strokeWidth="2.5" />
-        <text x="112" y="146" fill="#16404d" fontSize="24" fontWeight="600" fontFamily="var(--font-sans)">
-          SKILL.md
-        </text>
-        <path d="M112 168 H248" stroke="#e2dbc9" strokeWidth="3" strokeLinecap="round" />
-        <path d="M112 187 H228" stroke="#e2dbc9" strokeWidth="3" strokeLinecap="round" />
-      </svg>
+      <div className="relative mx-auto h-[330px] w-[330px]" aria-label="V50 logo emblem">
+        <div className="absolute inset-0 rounded-full border border-[#d7d0c2] bg-[#f6f2e9]" />
+        <div className="absolute inset-[10px] overflow-hidden rounded-full border border-[#d7d0c2] bg-white/80">
+          <Image src="/v50-logo.png" alt="V50 logo" fill sizes="330px" className="object-cover" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <svg viewBox="0 0 360 320" className="h-[330px] w-full" role="img" aria-label="Line-art animated SKILL.md card">
-      <defs>
-        <linearGradient id="v50-claw-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.75" />
-          <stop offset="100%" stopColor="#f1eee6" stopOpacity="0.85" />
-        </linearGradient>
-      </defs>
-
-      <motion.circle
-        cx="180"
-        cy="160"
-        r="126"
-        fill="url(#v50-claw-bg)"
-        stroke="#ddd7cb"
-        strokeDasharray="6 8"
+    <div className="relative mx-auto h-[330px] w-[330px]" aria-label="Animated V50 logo emblem">
+      <motion.div
+        className="absolute inset-0 rounded-full bg-[conic-gradient(from_180deg,#16404d,#8f7b53,#f2e4c8,#16404d)] p-[2.5px]"
         animate={{ rotate: [0, 360] }}
-        transition={{ duration: 28, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        style={{ transformOrigin: "180px 160px" }}
-      />
-
-      <motion.g
-        animate={{ y: [0, -10, 0], rotate: [0, -2, 0], scale: [1, 1.02, 1] }}
-        transition={{ duration: 4.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-        style={{ transformOrigin: "180px 160px" }}
+        transition={{ duration: 16, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
       >
-        <rect x="86" y="104" width="188" height="112" rx="18" fill="#fcfbf8" stroke="#d7d0c2" strokeWidth="2.5" />
-        <path d="M112 168 H248" stroke="#e2dbc9" strokeWidth="3" strokeLinecap="round" />
-        <path d="M112 187 H228" stroke="#e2dbc9" strokeWidth="3" strokeLinecap="round" />
-        <text x="112" y="146" fill="#16404d" fontSize="24" fontWeight="600" fontFamily="var(--font-sans)">
-          SKILL.md
-        </text>
-      </motion.g>
-    </svg>
+        <div className="h-full w-full rounded-full bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.88),rgba(247,243,235,0.9))]" />
+      </motion.div>
+
+      <motion.div
+        className="absolute inset-[10px] overflow-hidden rounded-full border border-[#d7d0c2] bg-white/80 shadow-[0_10px_24px_rgba(16,24,39,0.14)]"
+        animate={{ y: [0, -6, 0], scale: [1, 1.015, 1] }}
+        transition={{ duration: 5.2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+      >
+        <Image src="/v50-logo.png" alt="V50 logo" fill sizes="330px" className="object-cover" />
+      </motion.div>
+    </div>
   );
 }

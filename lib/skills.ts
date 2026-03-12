@@ -24,6 +24,8 @@ const REGISTRY_AUTHOR_ENRICH_LIMIT = Number(process.env.REGISTRY_AUTHOR_ENRICH_L
 const REGISTRY_AUTHOR_ENRICH_CONCURRENCY = Number(process.env.REGISTRY_AUTHOR_ENRICH_CONCURRENCY ?? "6");
 const MAX_SKILLS_SH_SKILLS = Number(process.env.SKILLS_SH_FETCH_LIMIT ?? "200000");
 const MAX_SKILLS_MP_SKILLS = Number(process.env.SKILLSMP_FETCH_LIMIT ?? "300000");
+const SKILLS_SH_ENRICH_LIMIT = Number(process.env.SKILLS_SH_ENRICH_LIMIT ?? "180");
+const SKILLS_SH_ENRICH_CONCURRENCY = Number(process.env.SKILLS_SH_ENRICH_CONCURRENCY ?? "8");
 const ENABLE_SKILLS_SH = process.env.SKILLS_SH_ENABLED !== "false";
 const ENABLE_SKILLS_MP = process.env.SKILLSMP_ENABLED !== "false";
 const RECENT_DAYS = Number(process.env.RECENT_DAYS ?? "30");
@@ -61,6 +63,16 @@ interface SkillMetaFile {
     commit?: string;
   };
 }
+
+const skillsShMarkdownCache = new Map<string, string | null>();
+
+interface SkillsShRenderedSnapshot {
+  body?: string;
+  stars?: number;
+  installs?: number;
+}
+
+const skillsShRenderedContentCache = new Map<string, SkillsShRenderedSnapshot | null>();
 
 function parseCategory(tags: string[], summary: string): string {
   const combined = `${tags.join(" ")} ${summary}`.toLowerCase();
@@ -286,8 +298,7 @@ function normalizeSkillsShSkill(item: SkillsShSkillItem): Skill | null {
   const name = item.name.trim() || skillId;
   if (!source || !skillId || !name) return null;
 
-  const summary =
-    `Indexed from skills.sh (${source}/${skillId}). Upstream summary metadata is limited for this source.`;
+  const summary = "No summary provided by upstream source.";
   const category = toTitleCase(parseCategory([], `${name} ${skillId} ${source}`));
 
   return {
@@ -319,13 +330,314 @@ function normalizeSkillsShSkill(item: SkillsShSkillItem): Skill | null {
       "This listing is imported from skills.sh public index metadata. Review upstream SKILL.md and repository scripts before running.",
     rawMarkdown: "",
     markdownBody: "",
-    githubPath: "",
+    githubPath: `${source}/${skillId}`,
     githubStars: undefined,
     downloads: typeof item.installs === "number" ? item.installs : undefined,
     installsCurrent: undefined,
     installsAllTime: typeof item.installs === "number" ? item.installs : undefined,
     moderationVerdict: undefined
   };
+}
+
+function parseSkillsShGithubPath(githubPath: string): { owner: string; repo: string; skillId: string } | null {
+  const parts = githubPath.split("/").map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 3) return null;
+  const [owner, repo, ...skillIdParts] = parts;
+  if (!owner || !repo || skillIdParts.length === 0) return null;
+  return {
+    owner,
+    repo,
+    skillId: skillIdParts.join("/")
+  };
+}
+
+function deriveSkillsShSkillVariants(skillId: string, owner: string, repo: string): string[] {
+  const trimmed = skillId.trim();
+  const parts = trimmed.split("/").map((part) => part.trim()).filter(Boolean);
+  const lastPart = parts[parts.length - 1] ?? trimmed;
+  const ownerPrefix = owner.split("-")[0]?.toLowerCase();
+  const repoPrefix = repo.split("-")[0]?.toLowerCase();
+
+  const variants = new Set<string>();
+  const addVariant = (value: string): void => {
+    const normalized = value.trim();
+    if (!normalized) return;
+    variants.add(normalized);
+    variants.add(normalizeSlugPart(normalized));
+  };
+
+  addVariant(trimmed);
+  addVariant(lastPart);
+
+  if (ownerPrefix && lastPart.toLowerCase().startsWith(`${ownerPrefix}-`)) {
+    addVariant(lastPart.slice(ownerPrefix.length + 1));
+  }
+
+  if (repoPrefix && lastPart.toLowerCase().startsWith(`${repoPrefix}-`)) {
+    addVariant(lastPart.slice(repoPrefix.length + 1));
+  }
+
+  const hyphenParts = lastPart.split("-").filter(Boolean);
+  if (hyphenParts.length >= 3) {
+    addVariant(hyphenParts.slice(1).join("-"));
+  }
+
+  return [...variants];
+}
+
+function buildSkillsShMarkdownPathCandidates(skillId: string, owner: string, repo: string): string[] {
+  const variants = deriveSkillsShSkillVariants(skillId, owner, repo);
+  const candidates: string[] = ["SKILL.md"];
+
+  for (const variant of variants) {
+    candidates.push(
+      `skills/${variant}/SKILL.md`,
+      `skill/${variant}/SKILL.md`,
+      `${variant}/SKILL.md`
+    );
+  }
+
+  return unique(candidates);
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'");
+}
+
+function htmlToPlainText(value: string): string {
+  return decodeHtmlEntities(
+    value
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/(p|h1|h2|h3|h4|h5|h6|li|ul|ol|pre|code|table|tr|blockquote)>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "- ")
+      .replace(/<[^>]+>/g, "")
+  )
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function extractSkillsShRenderedBody(html: string): string | null {
+  const proseMatch =
+    html.match(
+      /<span>SKILL\.md<\/span><\/div><div class="prose[^"]*"[^>]*>([\s\S]*?)<\/div><\/div><\/div><div class=" ?lg:col-span-3">/i
+    ) ??
+    html.match(/<div class="prose[^"]*"[^>]*>([\s\S]*?)<\/div><\/div><\/div><div class=" ?lg:col-span-3">/i);
+
+  if (!proseMatch) return null;
+  const plain = htmlToPlainText(proseMatch[1]);
+  return plain.length >= 20 ? plain : null;
+}
+
+function parseCompactMetric(rawValue: string): number | undefined {
+  const cleaned = rawValue.trim().replace(/,/g, "");
+  if (!cleaned || cleaned === "-") return undefined;
+  const matched = cleaned.match(/^([\d.]+)\s*([kmb]|万|亿)?$/i);
+  if (!matched) {
+    const plain = Number(cleaned);
+    return Number.isFinite(plain) ? plain : undefined;
+  }
+
+  const base = Number(matched[1]);
+  if (!Number.isFinite(base)) return undefined;
+  const unit = (matched[2] ?? "").toLowerCase();
+
+  if (unit === "k") return Math.round(base * 1_000);
+  if (unit === "m") return Math.round(base * 1_000_000);
+  if (unit === "b") return Math.round(base * 1_000_000_000);
+  if (unit === "万") return Math.round(base * 10_000);
+  if (unit === "亿") return Math.round(base * 100_000_000);
+  return Math.round(base);
+}
+
+function extractSkillsShRenderedMetrics(html: string): Pick<SkillsShRenderedSnapshot, "stars" | "installs"> {
+  const weeklyInstallsMatch = html.match(/Weekly Installs<\/span><\/div><div[^>]*>([^<]+)<\/div>/i);
+  const starsMatch = html.match(/GitHub Stars<\/span><\/div><div[^>]*>[\s\S]*?<span>([^<]+)<\/span>/i);
+
+  return {
+    installs: weeklyInstallsMatch ? parseCompactMetric(weeklyInstallsMatch[1]) : undefined,
+    stars: starsMatch ? parseCompactMetric(starsMatch[1]) : undefined
+  };
+}
+
+async function fetchSkillsShMarkdownFromGitHub(githubPath: string): Promise<string | null> {
+  const cached = skillsShMarkdownCache.get(githubPath);
+  if (cached !== undefined) return cached;
+
+  const parsed = parseSkillsShGithubPath(githubPath);
+  if (!parsed) {
+    skillsShMarkdownCache.set(githubPath, null);
+    return null;
+  }
+
+  const token = process.env.GITHUB_TOKEN?.trim();
+  const headers: HeadersInit = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
+  const branches = ["main", "master"];
+  const candidates = buildSkillsShMarkdownPathCandidates(parsed.skillId, parsed.owner, parsed.repo);
+
+  for (const branch of branches) {
+    for (const candidate of candidates) {
+      const url = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${branch}/${candidate}`;
+      try {
+        const response = await fetch(url, {
+          headers,
+          next: { revalidate: 60 * 30 }
+        });
+        if (!response.ok) continue;
+        const text = await response.text();
+        if (text.trim().length < 20) continue;
+        skillsShMarkdownCache.set(githubPath, text);
+        return text;
+      } catch {
+        // ignore and try next candidate
+      }
+    }
+  }
+
+  skillsShMarkdownCache.set(githubPath, null);
+  return null;
+}
+
+async function fetchSkillsShRenderedContent(
+  source: string,
+  skillId: string
+): Promise<SkillsShRenderedSnapshot | null> {
+  const cacheKey = `${source}/${skillId}`.toLowerCase();
+  const cached = skillsShRenderedContentCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const url = `https://skills.sh/${source}/${skillId}`;
+
+  try {
+    const response = await fetch(url, {
+      next: { revalidate: 60 * 30 }
+    });
+
+    if (!response.ok) {
+      skillsShRenderedContentCache.set(cacheKey, null);
+      return null;
+    }
+
+    const html = await response.text();
+    const body = extractSkillsShRenderedBody(html) ?? undefined;
+    const { stars, installs } = extractSkillsShRenderedMetrics(html);
+    const snapshot = body || stars !== undefined || installs !== undefined
+      ? { body, stars, installs }
+      : null;
+
+    skillsShRenderedContentCache.set(cacheKey, snapshot);
+    return snapshot;
+  } catch {
+    skillsShRenderedContentCache.set(cacheKey, null);
+    return null;
+  }
+}
+
+async function enrichSkillsShSkill(skill: Skill): Promise<Skill> {
+  if (!skill.id.startsWith("skills-sh/")) return skill;
+  if (skill.markdownBody) return skill;
+  if (!skill.githubPath) return skill;
+
+  const parsedPath = parseSkillsShGithubPath(skill.githubPath);
+  if (!parsedPath) return skill;
+
+  const renderedSnapshot = await fetchSkillsShRenderedContent(
+    `${parsedPath.owner}/${parsedPath.repo}`,
+    parsedPath.skillId
+  );
+  const resolvedStars = skill.githubStars ?? renderedSnapshot?.stars;
+  const resolvedDownloads =
+    skill.downloads ??
+    skill.installsAllTime ??
+    skill.installsCurrent ??
+    renderedSnapshot?.installs;
+
+  const rawSkill = await fetchSkillsShMarkdownFromGitHub(skill.githubPath);
+  if (!rawSkill) {
+    const renderedContent = renderedSnapshot?.body;
+    if (!renderedContent) {
+      if (resolvedStars === undefined && resolvedDownloads === undefined) return skill;
+      return {
+        ...skill,
+        githubStars: resolvedStars,
+        downloads: resolvedDownloads
+      };
+    }
+
+    const summary = inferSummary("", "", renderedContent);
+    const category = toTitleCase(parseCategory(skill.tags, summary));
+    const updatedAt = skill.updatedAt ? new Date(skill.updatedAt) : undefined;
+    const needsReview = summary.length < 20 || renderedContent.length < 20;
+
+    return {
+      ...skill,
+      summary,
+      description: renderedContent,
+      category,
+      rawMarkdown: renderedContent,
+      markdownBody: renderedContent,
+      githubStars: resolvedStars,
+      downloads: resolvedDownloads,
+      trustLabels: computeTrustLabels("repository_source", updatedAt, needsReview)
+    };
+  }
+
+  const parsed = parseSkillMarkdown(rawSkill);
+  const frontmatter = parsed.data;
+  const tags = unique([...skill.tags, ...parseFrontmatterTags(frontmatter)]);
+  const summary = inferSummary(frontmatter.description, parsed.excerpt, parsed.content || skill.summary);
+  const category = toTitleCase(parseFrontmatterCategory(frontmatter) ?? parseCategory(tags, summary));
+  const updatedAt = skill.updatedAt ? new Date(skill.updatedAt) : undefined;
+  const needsReview = summary.length < 20 || parsed.content.length < 20;
+
+  return {
+    ...skill,
+    name:
+      (typeof frontmatter.name === "string" && frontmatter.name.trim()) ||
+      skill.name,
+    summary,
+    description: parsed.content || skill.description,
+    category,
+    tags,
+    version: parseFrontmatterVersion(frontmatter) ?? skill.version,
+    author: parseFrontmatterAuthor(frontmatter) ?? skill.author,
+    rawMarkdown: rawSkill,
+    markdownBody: parsed.content,
+    githubStars: resolvedStars,
+    downloads: resolvedDownloads,
+    trustLabels: computeTrustLabels("repository_source", updatedAt, needsReview)
+  };
+}
+
+async function enrichSkillsShForListing(skills: Skill[]): Promise<Skill[]> {
+  if (skills.length === 0) return skills;
+
+  const limit = Math.max(0, Math.min(SKILLS_SH_ENRICH_LIMIT, skills.length));
+  if (limit === 0) return skills;
+
+  const result = [...skills];
+  const concurrency = Math.max(1, SKILLS_SH_ENRICH_CONCURRENCY);
+
+  for (let start = 0; start < limit; start += concurrency) {
+    const end = Math.min(limit, start + concurrency);
+    const chunk = await Promise.all(
+      result.slice(start, end).map((skill) => enrichSkillsShSkill(skill))
+    );
+
+    for (let i = 0; i < chunk.length; i += 1) {
+      result[start + i] = chunk[i];
+    }
+  }
+
+  return result;
 }
 
 function normalizeSkillsMpSkill(item: SkillsMpSkillItem): Skill | null {
@@ -669,10 +981,11 @@ async function fetchSkillsShSkillsNormalized(): Promise<Skill[]> {
 
   try {
     const { skills } = await fetchSkillsShAll({ view: "all-time" });
-    return skills
+    const normalized = skills
       .map((item) => normalizeSkillsShSkill(item))
       .filter((item): item is Skill => Boolean(item))
       .slice(0, MAX_SKILLS_SH_SKILLS);
+    return enrichSkillsShForListing(normalized);
   } catch {
     return [];
   }
@@ -721,6 +1034,35 @@ function shouldReplaceExistingSkill(existing: Skill, candidate: Skill): boolean 
   return candidateTime > existingTime;
 }
 
+function mergeSkillRecord(primary: Skill, fallback: Skill): Skill {
+  const shouldUseFallbackSummary =
+    !primary.summary ||
+    primary.summary === "No summary provided by source." ||
+    primary.summary === "No summary provided by upstream source.";
+  const shouldUseFallbackDescription =
+    !primary.description ||
+    primary.description === primary.summary;
+
+  return {
+    ...primary,
+    author: primary.author ?? fallback.author,
+    namespace: primary.namespace ?? fallback.namespace,
+    summary: shouldUseFallbackSummary ? fallback.summary : primary.summary,
+    description: shouldUseFallbackDescription ? fallback.description : primary.description,
+    rawMarkdown: primary.rawMarkdown || fallback.rawMarkdown,
+    markdownBody: primary.markdownBody || fallback.markdownBody,
+    githubPath: primary.githubPath || fallback.githubPath,
+    installationUrl: primary.installationUrl || fallback.installationUrl,
+    githubStars: primary.githubStars ?? fallback.githubStars,
+    downloads: primary.downloads ?? fallback.downloads,
+    installsCurrent: primary.installsCurrent ?? fallback.installsCurrent,
+    installsAllTime: primary.installsAllTime ?? fallback.installsAllTime,
+    moderationVerdict: primary.moderationVerdict ?? fallback.moderationVerdict,
+    tags: unique([...(primary.tags ?? []), ...(fallback.tags ?? [])]),
+    trustLabels: unique([...primary.trustLabels, ...fallback.trustLabels])
+  };
+}
+
 function dedupeAcrossSources(skills: Skill[]): Skill[] {
   const byKey = new Map<string, Skill>();
 
@@ -734,16 +1076,11 @@ function dedupeAcrossSources(skills: Skill[]): Skill[] {
     }
 
     if (shouldReplaceExistingSkill(existing, skill)) {
-      byKey.set(key, {
-        ...skill,
-        trustLabels: unique([...skill.trustLabels, ...existing.trustLabels])
-      });
-    } else {
-      byKey.set(key, {
-        ...existing,
-        trustLabels: unique([...existing.trustLabels, ...skill.trustLabels])
-      });
+      byKey.set(key, mergeSkillRecord(skill, existing));
+      continue;
     }
+
+    byKey.set(key, mergeSkillRecord(existing, skill));
   }
 
   return [...byKey.values()];
@@ -864,6 +1201,9 @@ export async function getSkillBySlug(slug: string): Promise<Skill | undefined> {
   if (!base) return undefined;
   if (base.sourceType === "registry_source") return enrichRegistrySkill(base);
   if (base.sourceType === "archived_source") return enrichArchiveSkill(base);
+  if (base.sourceType === "repository_source" && base.id.startsWith("skills-sh/")) {
+    return enrichSkillsShSkill(base);
+  }
   return base;
 }
 

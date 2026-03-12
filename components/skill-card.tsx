@@ -84,7 +84,6 @@ export function SkillCard({ skill, locale = "en", messages }: SkillCardProps) {
 
       <div className="mt-5 flex items-center justify-between border-t border-border pt-3 text-xs text-slate-500">
         <div className="flex items-center gap-3">
-          <span>{categoryLabel}</span>
           <span className="inline-flex items-center gap-1">
             <Star className="h-3.5 w-3.5" />
             {formatCompactNumber(stars, locale)}

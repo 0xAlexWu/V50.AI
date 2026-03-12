@@ -46,7 +46,6 @@ export function MetadataPanel({ skill, locale, messages }: MetadataPanelProps) {
   return (
     <aside className="mx-auto w-full max-w-[340px] space-y-5 rounded-[1.3rem] border border-border bg-card p-5 shadow-soft lg:mx-0 lg:sticky lg:top-24 lg:self-start">
       <div className="flex flex-wrap gap-2">
-        <Badge className="border-slate-300 bg-slate-50 text-slate-900">{categoryLabel}</Badge>
         <Badge className="inline-flex items-center gap-1 border-slate-300 bg-slate-50 text-slate-900">
           <Star className="h-3.5 w-3.5" />
           {formatCompactNumber(stars, locale)}
@@ -59,6 +58,7 @@ export function MetadataPanel({ skill, locale, messages }: MetadataPanelProps) {
         {extraTrustLabels.map((label) => (
           <TrustBadge key={`${skill.id}-${label}`} label={label} messages={messages} />
         ))}
+        <Badge className="border-slate-300 bg-slate-50 text-slate-900">{categoryLabel}</Badge>
       </div>
 
       <div className="space-y-3 text-sm text-slate-700">

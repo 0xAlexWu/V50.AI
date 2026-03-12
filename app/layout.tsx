@@ -8,24 +8,24 @@ import { getRequestI18n } from "@/lib/i18n-server";
 import "./globals.css";
 
 const siteDescription =
-  "V50.ai is a trust-aware storefront for discovering real OpenClaw skills from public sources.";
+  "V50.AI is a trust-aware storefront for discovering real OpenClaw skills from public sources.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://v50.ai"),
   title: {
-    default: "V50.ai | The Largest Skills Store for OpenClaw",
-    template: "%s | V50.ai"
+    default: "V50.AI | The Largest Skills Store for OpenClaw",
+    template: "%s | V50.AI"
   },
   description: siteDescription,
   openGraph: {
-    title: "V50.ai | The Largest Skills Store for OpenClaw",
+    title: "V50.AI | The Largest Skills Store for OpenClaw",
     description: siteDescription,
-    siteName: "V50.ai",
+    siteName: "V50.AI",
     type: "website"
   },
   twitter: {
     card: "summary_large_image",
-    title: "V50.ai",
+    title: "V50.AI",
     description: siteDescription
   },
   alternates: {
