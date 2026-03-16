@@ -28,7 +28,7 @@ export function InstallCommandPanel({ installTarget }: InstallCommandPanelProps)
   return (
     <section className="space-y-3 border-t border-border pt-4">
       <h3 className="text-sm font-semibold text-slate-900">Install</h3>
-      <p className="rounded-lg border border-border/80 bg-white px-3 py-2 font-mono text-xs text-slate-700">
+      <p className="rounded-[1rem] border border-white/62 bg-white/62 px-3 py-2 font-mono text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
         $ install --global skills.sh npx bunx pnpm
       </p>
 
@@ -41,8 +41,8 @@ export function InstallCommandPanel({ installTarget }: InstallCommandPanelProps)
             className={cn(
               "rounded-lg border px-2.5 py-1 text-xs font-semibold transition",
               runner === item
-                ? "border-accent bg-accent text-white"
-                : "border-border bg-white text-slate-700 hover:bg-muted"
+                ? "border-slate-950 bg-[linear-gradient(180deg,rgba(30,41,59,1),rgba(15,23,42,1))] text-white shadow-[0_18px_30px_-22px_rgba(15,23,42,0.95),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                : "border-white/62 bg-white/62 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] hover:bg-white/82"
             )}
           >
             {item}
@@ -50,13 +50,13 @@ export function InstallCommandPanel({ installTarget }: InstallCommandPanelProps)
         ))}
       </div>
 
-      <div className="space-y-2 rounded-xl border border-border bg-white p-3">
-        <p className="font-mono text-xs text-slate-800">{command}</p>
+      <div className="space-y-2 rounded-[1.2rem] border border-white/62 bg-white/62 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
+        <p className="max-w-full break-words font-mono text-xs text-slate-800 [overflow-wrap:anywhere]">{command}</p>
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-slate-500">Example: npx skills add openclaw/openclaw</p>
           <button
             type="button"
-            className="rounded-lg border border-border bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-muted"
+            className="rounded-full border border-slate-950 bg-[linear-gradient(180deg,rgba(30,41,59,1),rgba(15,23,42,1))] px-2.5 py-1 text-xs font-semibold text-white shadow-[0_18px_30px_-22px_rgba(15,23,42,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:brightness-[1.03]"
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(command);

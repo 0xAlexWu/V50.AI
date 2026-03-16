@@ -27,7 +27,7 @@ export function LanguageSwitcher({ currentLocale, label }: LanguageSwitcherProps
       <select
         value={currentLocale}
         onChange={(event) => onChange(event.target.value)}
-        className="h-9 rounded-xl border border-border bg-white/90 px-2 text-xs font-medium text-slate-700 outline-none transition focus:border-slate-400"
+        className="h-9 w-[4.6rem] rounded-full border border-white/60 bg-white/55 px-2.5 text-[11px] font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] outline-none backdrop-blur-xl transition focus:border-[#7aa8cf] focus:bg-white/78 sm:h-10 sm:w-auto sm:px-3 sm:text-xs"
         disabled={isPending}
       >
         {LANGUAGE_OPTIONS.map((option) => (

@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = {
   default:
-    "inline-flex items-center justify-center rounded-2xl bg-accent px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90",
+    "inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#123f63,#1d6f81)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_20px_34px_-22px_rgba(18,63,99,0.95)] transition hover:brightness-[1.04] active:translate-y-px",
   outline:
-    "inline-flex items-center justify-center rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted",
+    "inline-flex items-center justify-center rounded-full border border-white/60 bg-white/62 px-4 py-2.5 text-sm font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] backdrop-blur-xl transition hover:bg-white/82",
   ghost:
-    "inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-muted"
+    "inline-flex items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold text-foreground transition hover:bg-white/54"
 } as const;
 
 type Variant = keyof typeof buttonVariants;

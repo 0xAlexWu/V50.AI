@@ -47,35 +47,33 @@ export function SkillRow({ skill, locale = "en", messages }: SkillRowProps) {
       tabIndex={0}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="cursor-pointer rounded-2xl border border-border bg-card p-4 shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+      className="surface-card hover-lift cursor-pointer rounded-[1.35rem] p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:rounded-[1.55rem]"
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-semibold text-slate-900" title={skill.name}>
+            <h3 className="truncate text-[1.2rem] font-semibold tracking-[-0.035em] text-slate-950" title={skill.name}>
               {skill.name}
             </h3>
             <SourceBadge sourceType={skill.sourceType} messages={messages} />
           </div>
-          <p className="mt-1 text-sm text-slate-600">{skill.summary}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            {authorHandle ? (
-              <AuthorLink handle={authorHandle} className="text-accent hover:underline" />
-            ) : (
-              authorLabel
-            )}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-            <span className="inline-flex items-center gap-1">
-              <Star className="h-3.5 w-3.5" />
-              {formatCompactNumber(stars, locale)}
-            </span>
-            <span className="inline-flex items-center gap-1">
+          <p className="mt-2 text-sm leading-7 text-slate-600">{skill.summary}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/70 bg-white/70 px-2.5 py-1">
               <Download className="h-3.5 w-3.5" />
               {formatCompactNumber(downloads, locale)}
             </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-white/70 bg-white/70 px-2.5 py-1">
+              <Star className="h-3.5 w-3.5" />
+              {formatCompactNumber(stars, locale)}
+            </span>
+            {authorHandle ? (
+              <AuthorLink handle={authorHandle} className="block truncate font-medium text-accent hover:underline" />
+            ) : (
+              <span className="block truncate text-slate-500">{authorLabel}</span>
+            )}
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {skill.trustLabels.map((label) => (
               <TrustBadge key={`${skill.id}-${label}`} label={label} messages={messages} />
             ))}
@@ -84,7 +82,7 @@ export function SkillRow({ skill, locale = "en", messages }: SkillRowProps) {
 
         <Link
           href={detailHref}
-          className="inline-flex items-center rounded-xl border border-border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-muted"
+          className="inline-flex items-center justify-center rounded-full border border-white/62 bg-white/62 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82 max-lg:w-full lg:w-auto"
         >
           {messages?.common.viewSkill ?? "View Skill"}
         </Link>

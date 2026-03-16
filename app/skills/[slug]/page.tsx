@@ -51,7 +51,7 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
   }
 
   const allSkills = await getAllSkills();
-  const related = pickRelatedSkills(allSkills, skill, 3);
+  const related = pickRelatedSkills(allSkills, skill, 4);
   const [localizedSkill] = await localizeSkillsForLocale([skill], locale, {
     includeDescription: true,
     includeMarkdown: true,
@@ -73,8 +73,8 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
     <div className="space-y-8">
       <SectionHeader title={localizedSkill.name} description={localizedSkill.summary} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+        <div className="order-2 min-w-0 space-y-5 sm:space-y-6 lg:order-1">
           <SafetyNotice note={localizedSkill.safetyNote} title={messages.safety.title} />
           <AssistantInstallPrompt
             skillName={localizedSkill.name}
@@ -89,19 +89,21 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
           )}
         </div>
 
-        <div className="w-full justify-self-end">
+        <div className="order-1 min-w-0 w-full justify-self-stretch lg:order-2 lg:justify-self-end">
           <MetadataPanel skill={localizedSkill} locale={locale} messages={messages} />
         </div>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h2 className="font-[var(--font-serif)] text-2xl text-slate-900">{messages.detail.sourceTransparencyTitle}</h2>
-        <p className="mt-2 text-sm text-slate-600">{messages.detail.sourceTransparencyDesc}</p>
+      <section className="surface-card rounded-[1.5rem] p-5 sm:rounded-[1.8rem] sm:p-6">
+        <h2 className="font-[var(--font-serif)] text-2xl tracking-[-0.04em] text-slate-950">
+          {messages.detail.sourceTransparencyTitle}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{messages.detail.sourceTransparencyDesc}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href={localizedSkill.sourceUrl}
             target="_blank"
-            className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-muted"
+            className="rounded-full border border-white/62 bg-white/64 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
           >
             {sourceLinkLabel}
           </Link>
@@ -109,7 +111,7 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
             <Link
               href={localizedSkill.installationUrl}
               target="_blank"
-              className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-muted"
+              className="rounded-full border border-white/62 bg-white/64 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
             >
               {messages.detail.openInClawHub}
             </Link>
@@ -120,7 +122,7 @@ export default async function SkillDetailPage({ params }: SkillDetailPageProps) 
       {localizedRelated.length > 0 ? (
         <section>
           <SectionHeader title={messages.detail.relatedTitle} description={messages.detail.relatedDesc} />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {localizedRelated.map((relatedSkill) => (
               <SkillCard key={relatedSkill.id} skill={relatedSkill} locale={locale} messages={messages} />
             ))}

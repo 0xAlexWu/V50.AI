@@ -3,11 +3,11 @@ import { getTrustLabel, type Messages } from "@/lib/i18n";
 import type { TrustLabel } from "@/types/skill";
 
 const trustStyles: Record<TrustLabel, string> = {
-  "Archived Source": "border-amber-300 bg-amber-50 text-amber-900",
-  "Registry Source": "border-emerald-300 bg-emerald-50 text-emerald-900",
-  "Repository Source": "border-sky-300 bg-sky-50 text-sky-900",
-  "Recently Updated": "border-sky-300 bg-sky-50 text-sky-900",
-  "Needs Review": "border-rose-300 bg-rose-50 text-rose-900"
+  "Archived Source": "border-[#f3d49a] bg-[rgba(255,241,210,0.7)] text-[#8a5b17]",
+  "Registry Source": "border-[#9ee1c9] bg-[rgba(222,249,239,0.72)] text-[#0f7a58]",
+  "Repository Source": "border-[#a9d2ff] bg-[rgba(227,240,255,0.72)] text-[#245e99]",
+  "Recently Updated": "border-[#a9d2ff] bg-[rgba(227,240,255,0.72)] text-[#245e99]",
+  "Needs Review": "border-[#f1b6bb] bg-[rgba(255,234,236,0.76)] text-[#a13a48]"
 };
 
 interface TrustBadgeProps {

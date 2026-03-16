@@ -106,7 +106,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       ) : null}
 
       {totalResults > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white/72 px-4 py-2 text-sm text-slate-700">
+        <div className="surface-card-subtle flex flex-col gap-2 rounded-[1.4rem] px-4 py-3 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between">
           <p>
             Showing {pageStart + 1}-{pageEnd} of {totalResults.toLocaleString(locale)} skills
           </p>
@@ -125,7 +125,7 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {localizedPagedSkills.map((skill) => (
             <SkillCard key={skill.id} skill={skill} locale={locale} messages={messages} />
           ))}
@@ -133,14 +133,14 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
       )}
 
       {totalPages > 1 ? (
-        <nav className="flex flex-wrap items-center justify-center gap-2">
+        <nav className="glass-panel flex flex-wrap items-center justify-center gap-2 rounded-[1.4rem] px-3 py-3">
           <Link
             href={buildPageHref(currentPage - 1)}
             aria-disabled={currentPage <= 1}
             className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
               currentPage <= 1
-                ? "pointer-events-none border-border/50 text-slate-400"
-                : "border-border bg-white text-slate-700 hover:bg-muted"
+                ? "pointer-events-none border-white/40 text-slate-400"
+                : "border-white/62 bg-white/64 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] hover:bg-white/82"
             }`}
           >
             Previous
@@ -153,8 +153,8 @@ export default async function SkillsPage({ searchParams }: SkillsPageProps) {
             aria-disabled={currentPage >= totalPages}
             className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
               currentPage >= totalPages
-                ? "pointer-events-none border-border/50 text-slate-400"
-                : "border-border bg-white text-slate-700 hover:bg-muted"
+                ? "pointer-events-none border-white/40 text-slate-400"
+                : "border-white/62 bg-white/64 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] hover:bg-white/82"
             }`}
           >
             Next

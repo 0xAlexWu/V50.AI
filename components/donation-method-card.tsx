@@ -35,7 +35,7 @@ export function DonationMethodCard({
   }, [walletUri]);
 
   return (
-    <article className="rounded-xl border border-border bg-white/85 p-4">
+    <article className="surface-card-subtle rounded-[1.45rem] p-4">
       <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
         <img
           src={logoBySymbol[symbol]}
@@ -47,7 +47,7 @@ export function DonationMethodCard({
         />
         {symbol}
       </p>
-      <p className="mt-1 break-all rounded-lg bg-muted/45 px-2 py-1.5 font-mono text-xs text-slate-700">
+      <p className="mt-2 break-all rounded-[1rem] border border-white/62 bg-white/62 px-2.5 py-2 font-mono text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
         {address || addressMissingLabel}
       </p>
 
@@ -57,14 +57,14 @@ export function DonationMethodCard({
             <button
               type="button"
               onClick={() => setShowQr((current) => !current)}
-              className="inline-flex rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-muted"
+              className="inline-flex rounded-full border border-white/62 bg-white/64 px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
               aria-expanded={showQr}
             >
               {showQr ? hideQrLabel : showQrLabel}
             </button>
           </div>
           {showQr ? (
-            <div className="mt-3 rounded-lg border border-border bg-white p-3">
+            <div className="mt-3 rounded-[1.1rem] border border-white/62 bg-white/68 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)]">
               <img
                 src={qrSrc}
                 alt={`${symbol} wallet QR code`}

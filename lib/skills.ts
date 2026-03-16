@@ -213,6 +213,46 @@ function sortByUpdated(a: Skill, b: Skill): number {
   return bTime - aTime;
 }
 
+function updatedTimestampForQuery(skill: Skill): number {
+  if (!skill.updatedAt) return 0;
+  const timestamp = new Date(skill.updatedAt).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function recentBucketForQuery(skill: Skill): number {
+  const timestamp = updatedTimestampForQuery(skill);
+  if (!timestamp) return 0;
+  const diffDays = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+  if (diffDays <= 3) return 3;
+  if (diffDays <= 7) return 2;
+  if (diffDays <= 30) return 1;
+  return 0;
+}
+
+function signalScoreForQuery(skill: Skill): number {
+  const hasStars = (getSkillStars(skill) ?? 0) > 0;
+  const hasDownloads = (getSkillDownloads(skill) ?? 0) > 0;
+  if (hasStars && hasDownloads) return 2;
+  if (hasStars || hasDownloads) return 1;
+  return 0;
+}
+
+function sortByRecentWithSignals(a: Skill, b: Skill): number {
+  const bucketDelta = recentBucketForQuery(b) - recentBucketForQuery(a);
+  if (bucketDelta !== 0) return bucketDelta;
+
+  const signalDelta = signalScoreForQuery(b) - signalScoreForQuery(a);
+  if (signalDelta !== 0) return signalDelta;
+
+  const updatedDelta = updatedTimestampForQuery(b) - updatedTimestampForQuery(a);
+  if (updatedDelta !== 0) return updatedDelta;
+
+  const downloadDelta = (getSkillDownloads(b) ?? 0) - (getSkillDownloads(a) ?? 0);
+  if (downloadDelta !== 0) return downloadDelta;
+
+  return (getSkillStars(b) ?? 0) - (getSkillStars(a) ?? 0);
+}
+
 function parseRegistryTags(tags: Record<string, string> | undefined): string[] {
   if (!tags) return [];
 
@@ -1012,11 +1052,16 @@ function sourcePriority(skill: Skill): number {
 }
 
 function canonicalSkillKey(skill: Skill): string {
-  if (skill.registrySlug) return `registry:${skill.registrySlug.toLowerCase()}`;
-
   const author = (skill.author ?? skill.namespace ?? "").trim().toLowerCase();
+  const registrySlug = skill.registrySlug ? normalizeSlugPart(skill.registrySlug) : "";
+  const githubParts = skill.githubPath.split("/").map((part) => part.trim()).filter(Boolean);
+  const repositorySkillId = githubParts.length > 0 ? normalizeSlugPart(githubParts[githubParts.length - 1]) : "";
   const name = normalizeSlugPart(skill.name || skill.slug);
+
+  if (author && registrySlug) return `author:${author}::registry:${registrySlug}`;
+  if (author && repositorySkillId) return `author:${author}::repo:${repositorySkillId}`;
   if (author && name) return `author:${author}::name:${name}`;
+  if (registrySlug) return `registry:${registrySlug}`;
 
   const slug = normalizeSlugPart(skill.slug);
   if (slug) return `slug:${slug}`;
@@ -1269,7 +1314,7 @@ export function querySkills(skills: Skill[], query: SkillsQuery): Skill[] {
       break;
     case "recent":
     default:
-      output = [...output].sort(sortByUpdated);
+      output = [...output].sort(sortByRecentWithSignals);
   }
 
   return output;

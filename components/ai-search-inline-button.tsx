@@ -87,7 +87,7 @@ export function AiSearchInlineButton({
       type="button"
       onClick={() => void runAiSearch()}
       disabled={pending}
-      className="inline-flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[1.35rem] border border-slate-950 bg-[linear-gradient(180deg,rgba(30,41,59,1),rgba(15,23,42,1))] px-4 text-sm font-semibold text-white shadow-[0_18px_30px_-22px_rgba(15,23,42,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:brightness-[1.03] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
     >
       <Sparkles className="h-4 w-4" />
       {pending ? loadingLabel : buttonLabel}

@@ -14,20 +14,20 @@ interface HeroProps {
 
 export function Hero({ totalSkills, locale, messages }: HeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-8 shadow-soft md:p-12">
+    <section className="relative overflow-hidden rounded-[2rem] border border-border bg-card p-5 shadow-soft sm:p-8 md:p-12">
       <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_minmax(300px,390px)] md:items-center">
         <div>
           <FadeIn>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">{messages.hero.kicker}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent sm:text-xs sm:tracking-[0.25em]">{messages.hero.kicker}</p>
           </FadeIn>
-          <h1 className="mt-5 max-w-3xl font-[var(--font-serif)] text-4xl leading-tight text-slate-900 md:text-6xl">
+          <h1 className="mt-4 max-w-3xl font-[var(--font-serif)] text-3xl leading-tight text-slate-900 sm:mt-5 sm:text-4xl md:text-6xl">
             <AnimatedWords text={messages.hero.title} delay={0.12} stagger={0.032} />
           </h1>
-          <p className="mt-7 max-w-2xl text-base leading-relaxed text-slate-700 md:text-lg">
+          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-700 sm:mt-7 sm:text-base md:text-lg">
             <AnimatedWords text={messages.hero.subtitle} delay={0.4} stagger={0.02} />
           </p>
 
-          <FadeIn delay={0.22} className="mt-9 flex flex-wrap items-center gap-3">
+          <FadeIn delay={0.22} className="mt-7 flex flex-wrap items-center gap-3 sm:mt-9">
             <Link href="/skills">
               <Button>{messages.hero.browseSkills}</Button>
             </Link>

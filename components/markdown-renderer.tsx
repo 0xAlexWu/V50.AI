@@ -7,7 +7,7 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ markdown }: MarkdownRendererProps) {
   return (
-    <article className="prose-v50 rounded-[1.3rem] border border-border bg-card p-6 text-slate-700 shadow-soft md:p-8">
+    <article className="surface-card prose-v50 min-w-0 overflow-hidden rounded-[1.7rem] p-4 text-slate-700 sm:p-6 md:p-8">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -18,18 +18,18 @@ export function MarkdownRenderer({ markdown }: MarkdownRendererProps) {
           ),
           code: ({ className, children }) => {
             if (!className) {
-              return <code className="rounded border border-border/80 bg-transparent px-1.5 py-0.5 text-sm">{children}</code>;
+              return <code className="rounded-lg border border-white/62 bg-white/62 px-1.5 py-0.5 text-sm">{children}</code>;
             }
 
-            return <code className={className}>{children}</code>;
+            return <code className={className + " whitespace-pre text-[13px] leading-6"}>{children}</code>;
           },
           table: ({ children }) => (
-            <div className="my-5 overflow-x-auto">
+            <div className="my-5 max-w-full overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">{children}</table>
             </div>
           ),
           th: ({ children }) => (
-            <th className="border border-border bg-transparent px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
+            <th className="border border-border bg-white/42 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700">
               {children}
             </th>
           ),

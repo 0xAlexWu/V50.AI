@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { AuthorMetricsChart } from "@/components/author-metrics-chart";
 import { AuthorSubscribeButton } from "@/components/author-subscribe-button";
 import { SectionHeader } from "@/components/section-header";
-import { SkillRow } from "@/components/skill-row";
+import { SkillCard } from "@/components/skill-card";
 import { getAuthorDisplayName, findAuthorSkills } from "@/lib/authors";
 import { formatMessage } from "@/lib/i18n";
 import { getRequestI18n } from "@/lib/i18n-server";
@@ -105,9 +105,9 @@ export default async function AuthorProfilePage({ params }: AuthorPageProps) {
 
       <section className="space-y-3">
         <SectionHeader title={messages.author.skillsTitle} />
-        <div className="space-y-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {localizedAuthorSkills.map((skill) => (
-            <SkillRow key={skill.id} skill={skill} locale={locale} messages={messages} />
+            <SkillCard key={skill.id} skill={skill} locale={locale} messages={messages} />
           ))}
         </div>
       </section>

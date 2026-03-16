@@ -44,13 +44,13 @@ export function MetadataPanel({ skill, locale, messages }: MetadataPanelProps) {
       : rawInstallSlug;
 
   return (
-    <aside className="mx-auto w-full max-w-[340px] space-y-5 rounded-[1.3rem] border border-border bg-card p-5 shadow-soft lg:mx-0 lg:sticky lg:top-24 lg:self-start">
+    <aside className="surface-card mx-auto w-full max-w-full space-y-4 rounded-[1.45rem] p-4 sm:max-w-[340px] sm:rounded-[1.7rem] sm:p-5 lg:mx-0 lg:sticky lg:top-24 lg:self-start">
       <div className="flex flex-wrap gap-2">
-        <Badge className="inline-flex items-center gap-1 border-slate-300 bg-slate-50 text-slate-900">
+        <Badge className="inline-flex items-center gap-1 border-white/72 bg-white/72 text-slate-900">
           <Star className="h-3.5 w-3.5" />
           {formatCompactNumber(stars, locale)}
         </Badge>
-        <Badge className="inline-flex items-center gap-1 border-slate-300 bg-slate-50 text-slate-900">
+        <Badge className="inline-flex items-center gap-1 border-white/72 bg-white/72 text-slate-900">
           <Download className="h-3.5 w-3.5" />
           {formatCompactNumber(downloads, locale)}
         </Badge>
@@ -58,27 +58,27 @@ export function MetadataPanel({ skill, locale, messages }: MetadataPanelProps) {
         {extraTrustLabels.map((label) => (
           <TrustBadge key={`${skill.id}-${label}`} label={label} messages={messages} />
         ))}
-        <Badge className="border-slate-300 bg-slate-50 text-slate-900">{categoryLabel}</Badge>
+        <Badge className="border-white/72 bg-white/72 text-slate-900">{categoryLabel}</Badge>
       </div>
 
       <div className="space-y-3 text-sm text-slate-700">
-        <p className="flex items-center gap-2 rounded-xl bg-muted/45 px-3 py-2">
+        <p className="flex min-w-0 items-center gap-2 rounded-[1.1rem] border border-white/60 bg-white/54 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
           <UserCircle2 className="h-4 w-4" />
           {authorHandle ? (
-            <AuthorLink handle={authorHandle} className="text-accent hover:underline" />
+            <AuthorLink handle={authorHandle} className="truncate text-accent hover:underline" />
           ) : (
-            <span>{authorLabel}</span>
+            <span className="truncate">{authorLabel}</span>
           )}
         </p>
-        <p className="flex items-center gap-2 rounded-xl bg-muted/45 px-3 py-2">
+        <p className="flex min-w-0 items-center gap-2 rounded-[1.1rem] border border-white/60 bg-white/54 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
           <Package className="h-4 w-4" />
-          <span>
+          <span className="min-w-0 truncate">
             {skill.version
               ? formatMessage(messages.metadata.versionPrefix, { version: skill.version })
               : messages.metadata.versionNotProvided}
           </span>
         </p>
-        <p className="flex items-center gap-2 rounded-xl bg-muted/45 px-3 py-2">
+        <p className="flex min-w-0 items-center gap-2 rounded-[1.1rem] border border-white/60 bg-white/54 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
           <CalendarDays className="h-4 w-4" />
           <span>
             {skill.updatedAt
@@ -93,11 +93,11 @@ export function MetadataPanel({ skill, locale, messages }: MetadataPanelProps) {
       </div>
 
       <div className="space-y-2 border-t border-border pt-4 text-sm">
-        <Link href={skill.sourceUrl} target="_blank" className="block text-accent underline underline-offset-4">
+        <Link href={skill.sourceUrl} target="_blank" className="block font-semibold text-accent underline underline-offset-4">
           {sourceLinkLabel}
         </Link>
         {skill.installationUrl ? (
-          <Link href={skill.installationUrl} target="_blank" className="block text-accent underline underline-offset-4">
+          <Link href={skill.installationUrl} target="_blank" className="block font-semibold text-accent underline underline-offset-4">
             {messages.detail.openInClawHub}
           </Link>
         ) : null}

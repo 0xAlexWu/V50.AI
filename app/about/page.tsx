@@ -52,7 +52,7 @@ export default async function AboutPage() {
         }
       />
 
-      <section className="space-y-4 rounded-[1.4rem] border border-border bg-card p-6 shadow-soft">
+      <section className="surface-card space-y-4 rounded-[1.7rem] p-6">
         <h2 className="font-[var(--font-serif)] text-2xl text-slate-900">{messages.about.whyTitle}</h2>
         <p className="text-sm leading-relaxed text-slate-700">
           Open ecosystems grow fast. Discoverability and trust context often lag.
@@ -69,7 +69,7 @@ export default async function AboutPage() {
         </ul>
       </section>
 
-      <section className="space-y-4 rounded-[1.4rem] border border-border bg-card p-6 shadow-soft">
+      <section className="surface-card space-y-4 rounded-[1.7rem] p-6">
         <h2 className="font-[var(--font-serif)] text-2xl text-slate-900">{messages.about.donationTitle}</h2>
         <p className="text-sm leading-relaxed text-slate-700">{messages.about.donationBody}</p>
         <div className="grid gap-3 md:grid-cols-2">

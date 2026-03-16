@@ -54,18 +54,18 @@ export function AuthorMetricsChart({
 
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs text-slate-600">
-              <span className="w-[82px]">{starsLabel}</span>
+              <span className="w-[62px] shrink-0 sm:w-[82px]">{starsLabel}</span>
               <div className="h-2 flex-1 rounded-full bg-muted/65">
                 <div
                   className="h-2 rounded-full bg-sky-500/75"
                   style={{ width: `${Math.max((entry.stars / maxStars) * 100, entry.stars > 0 ? 7 : 0)}%` }}
                 />
               </div>
-              <span className="w-[48px] text-right">{formatCompactNumber(entry.stars, locale)}</span>
+              <span className="w-[40px] shrink-0 text-right sm:w-[48px]">{formatCompactNumber(entry.stars, locale)}</span>
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-600">
-              <span className="w-[82px]">{downloadsLabel}</span>
+              <span className="w-[62px] shrink-0 sm:w-[82px]">{downloadsLabel}</span>
               <div className="h-2 flex-1 rounded-full bg-muted/65">
                 <div
                   className="h-2 rounded-full bg-emerald-500/75"
@@ -74,7 +74,7 @@ export function AuthorMetricsChart({
                   }}
                 />
               </div>
-              <span className="w-[48px] text-right">{formatCompactNumber(entry.downloads, locale)}</span>
+              <span className="w-[40px] shrink-0 text-right sm:w-[48px]">{formatCompactNumber(entry.downloads, locale)}</span>
             </div>
           </div>
         </div>

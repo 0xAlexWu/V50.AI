@@ -11,6 +11,7 @@ export interface Messages {
     storeTagline: string;
     home: string;
     skills: string;
+    studio: string;
     collections: string;
     about: string;
     searchAria: string;
@@ -30,6 +31,18 @@ export interface Messages {
     liveEntries: string;
   };
   home: {
+    showcaseKicker: string;
+    showcaseTitle: string;
+    showcaseDesc: string;
+    showcaseLiveSignal: string;
+    showcasePrimaryCta: string;
+    showcaseSecondaryCta: string;
+    trendTitle: string;
+    trendDesc: string;
+    trendNewLabel: string;
+    trendDownloadsTab: string;
+    trendStarsTab: string;
+    trendLatestTab: string;
     featuredTitle: string;
     featuredDesc: string;
     recentlyUpdatedTitle: string;
@@ -175,15 +188,16 @@ const en: Messages = {
     storeTagline: "The Largest Skills Store for OpenClaw",
     home: "Home",
     skills: "Skills",
+    studio: "Studio",
     collections: "Collections",
     about: "About",
     searchAria: "Search skills",
     language: "Language"
   },
   footer: {
-    description: "V50.ai surfaces public OpenClaw skills with source transparency and trust-aware labels.",
-    clawhubRepo: "ClawHub Repo",
-    skillsArchive: "Skills Archive"
+    description: "Risk notice: V50.AI curates public skills only. Review source, permissions, and behavior before use.",
+    clawhubRepo: "V50AI on X",
+    skillsArchive: "Email V50.AI"
   },
   hero: {
     kicker: "The Largest Skills Store for OpenClaw",
@@ -195,6 +209,19 @@ const en: Messages = {
     liveEntries: "{count} live entries loaded from trusted public sources"
   },
   home: {
+    showcaseKicker: "Daily Recommendation",
+    showcaseTitle: "Discover the best OpenClaw skills here.",
+    showcaseDesc:
+      "Editorially surfaced from live public data with transparent signals across metadata quality, installs, stars, and recency.",
+    showcaseLiveSignal: "{count} real skills in the live index",
+    showcasePrimaryCta: "Open Skill",
+    showcaseSecondaryCta: "Explore Directory",
+    trendTitle: "Trending Now",
+    trendDesc: "Momentum across downloads, stars, and newly published entries.",
+    trendNewLabel: "New",
+    trendDownloadsTab: "Most Downloads",
+    trendStarsTab: "Most Stars",
+    trendLatestTab: "Latest",
     featuredTitle: "Featured",
     featuredDesc: "Editorial picks selected from real entries with stronger metadata and clearer documentation.",
     recentlyUpdatedTitle: "Recently Updated",
@@ -342,6 +369,7 @@ const localeOverrides: Record<Locale, DeepPartial<Messages>> = {
       storeTagline: "OpenClaw 技能商店",
       home: "首页",
       skills: "技能",
+      studio: "Studio",
       collections: "合集",
       about: "关于",
       searchAria: "搜索技能",
@@ -356,6 +384,18 @@ const localeOverrides: Record<Locale, DeepPartial<Messages>> = {
       liveEntries: "已加载 {count} 条真实技能"
     },
     home: {
+      showcaseKicker: "每日推荐",
+      showcaseTitle: "以更像 storefront 的方式发现真实 OpenClaw 技能。",
+      showcaseDesc: "基于真实公开数据进行编辑式呈现，综合元数据完整度、下载量、标星与最近更新信号。",
+      showcaseLiveSignal: "实时索引中共有 {count} 个真实技能",
+      showcasePrimaryCta: "打开技能",
+      showcaseSecondaryCta: "浏览目录",
+      trendTitle: "趋势榜",
+      trendDesc: "按下载、标星与新发布信号综合排序。",
+      trendNewLabel: "新发布",
+      trendDownloadsTab: "下载最多",
+      trendStarsTab: "标星最多",
+      trendLatestTab: "最新出炉",
       featuredTitle: "精选",
       featuredDesc: "基于真实数据、元信息更完整的编辑精选。",
       recentlyUpdatedTitle: "最近更新",
