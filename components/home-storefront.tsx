@@ -40,12 +40,6 @@ type TrendMode = "downloads" | "stars" | "latest";
 type RankSnapshot = Record<TrendMode, Record<string, number>>;
 
 const TREND_SNAPSHOT_STORAGE_KEY = "v50-home-trend-snapshots-v1";
-const MOCK_TREND_DELTAS: Record<string, number> = {
-  "find-skills": 1,
-  "frontend-design": -1,
-  "skill-creator": 1,
-  "pdf": 1
-};
 
 interface CategoryPalette {
   shell: string;
@@ -116,30 +110,6 @@ const paletteByCategory: Record<string, CategoryPalette> = {
 
 function buildRankMap(skills: Skill[]): Record<string, number> {
   return Object.fromEntries(skills.map((skill, index) => [skill.slug, index + 1]));
-}
-
-function normalizeTrendIdentity(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function getMockTrendDelta(skill: Skill): number | undefined {
-  const candidates = [
-    normalizeTrendIdentity(skill.name),
-    normalizeTrendIdentity(skill.slug),
-    normalizeTrendIdentity(skill.slug.split("--").pop() ?? "")
-  ];
-
-  for (const candidate of candidates) {
-    const delta = MOCK_TREND_DELTAS[candidate];
-    if (typeof delta === "number") return delta;
-  }
-
-  return undefined;
 }
 
 export function HomeStorefront({
@@ -217,11 +187,9 @@ export function HomeStorefront({
         ? trendingByStars
         : trendingLatest;
 
-  const getRankDelta = (mode: TrendMode, slug: string, currentRank: number, skill?: Skill): number | null => {
+  const getRankDelta = (mode: TrendMode, slug: string, currentRank: number): number | null => {
     const previousRank = previousRankSnapshots?.[mode]?.[slug];
-    if (typeof previousRank !== "number") {
-      return skill ? getMockTrendDelta(skill) ?? null : null;
-    }
+    if (typeof previousRank !== "number") return null;
     return previousRank - currentRank;
   };
 
@@ -571,7 +539,7 @@ export function HomeStorefront({
                 const trendDownloads = getSkillDownloads(skill);
                 const trendStars = getSkillStars(skill);
                 const currentRank = trendIndex + 1;
-                const rankDelta = getRankDelta(trendMode, skill.slug, currentRank, skill);
+                const rankDelta = getRankDelta(trendMode, skill.slug, currentRank);
                 return (
                   <Link
                     key={skill.id}
@@ -608,7 +576,6 @@ export function HomeStorefront({
                               ) : (
                                 <TrendingDown className="h-3 w-3" />
                               )}
-                              {rankDelta === 0 ? "" : Math.abs(rankDelta)}
                             </span>
                           ) : null}
                         </div>
