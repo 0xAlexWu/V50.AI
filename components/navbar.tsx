@@ -22,7 +22,6 @@ export function Navbar({ locale, messages }: NavbarProps) {
   const links = [
     { href: "/", label: messages.nav.home },
     { href: "/skills", label: messages.nav.skills },
-    { href: "/studio", label: messages.nav.studio },
     { href: "/collections", label: messages.nav.collections },
     { href: "/about", label: messages.nav.about }
   ];
