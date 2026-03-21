@@ -180,6 +180,7 @@ export function HomeStorefront({
   const stars = getSkillStars(active);
   const downloads = getSkillDownloads(active);
   const primaryTrust = active.trustLabels[0];
+  const isEditorsExclusive = active.id === "editorial-showcase-injective-cli";
   const primaryHref = active.detailHref ?? `/skills/${active.slug}`;
   const primaryExternal = /^https?:\/\//.test(primaryHref);
   const trending =
@@ -400,6 +401,11 @@ export function HomeStorefront({
                         {active.trustLabels[1] ? (
                           <Badge className="border-white/72 bg-white/56 text-slate-700">
                             {getTrustLabel(active.trustLabels[1], messages)}
+                          </Badge>
+                        ) : null}
+                        {isEditorsExclusive ? (
+                          <Badge className="border-white/72 bg-white/56 text-slate-700">
+                            Editor&apos;s Exclusive
                           </Badge>
                         ) : null}
                       </div>
