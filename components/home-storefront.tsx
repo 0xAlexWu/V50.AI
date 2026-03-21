@@ -180,6 +180,8 @@ export function HomeStorefront({
   const stars = getSkillStars(active);
   const downloads = getSkillDownloads(active);
   const primaryTrust = active.trustLabels[0];
+  const primaryHref = active.detailHref ?? `/skills/${active.slug}`;
+  const primaryExternal = /^https?:\/\//.test(primaryHref);
   const trending =
     trendMode === "downloads"
       ? trendingByDownloads
@@ -439,7 +441,9 @@ export function HomeStorefront({
                   <div className="mt-7 sm:mt-8">
                     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                       <Link
-                        href={`/skills/${active.slug}`}
+                        href={primaryHref}
+                        target={primaryExternal ? "_blank" : undefined}
+                        rel={primaryExternal ? "noreferrer" : undefined}
                         className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-950 bg-[linear-gradient(180deg,rgba(30,41,59,1),rgba(15,23,42,1))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_30px_-22px_rgba(15,23,42,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] transition hover:brightness-[1.03]"
                       >
                         {messages.home.showcasePrimaryCta}

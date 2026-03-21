@@ -1,6 +1,51 @@
 import { getSkillDownloads, getSkillStars } from "@/lib/skill-signals";
 import type { Skill } from "@/types/skill";
 
+const INJECTIVE_CLI_SHOWCASE_SKILL: Skill = {
+  id: "editorial-showcase-injective-cli",
+  slug: "injectivelabs-injective-cli-showcase",
+  detailHref: "https://github.com/InjectiveLabs/agent-skills/tree/master/skills/injective-cli",
+  name: "Injective CLI Skill",
+  summary:
+    "Gives your agent direct access to the injectived binary for querying and transacting on-chain. Handles wallet configuration, endpoint selection, and gas management so the agent can focus on execution. Use plain English commands to interact with the Injective network!",
+  description:
+    "Gives your agent direct access to the injectived binary for querying and transacting on-chain. Handles wallet configuration, endpoint selection, and gas management so the agent can focus on execution. Use plain English commands to interact with the Injective network!",
+  category: "Web3",
+  tags: ["injective", "cli", "web3", "onchain", "agent-skills"],
+  sourceUrl: "https://github.com/InjectiveLabs/agent-skills/tree/master/skills/injective-cli",
+  sourceType: "repository_source",
+  author: "InjectiveLabs",
+  namespace: "InjectiveLabs",
+  trustLabels: ["Repository Source"],
+  installationUrl: "https://github.com/InjectiveLabs/agent-skills",
+  safetyNote:
+    "This showcase entry is sourced from a public GitHub repository. Review the skill directory, required binaries, and install command before running it.",
+  rawMarkdown: [
+    "# Injective CLI Skill",
+    "",
+    "Gives your agent direct access to the injectived binary for querying and transacting on-chain. Handles wallet configuration, endpoint selection, and gas management so the agent can focus on execution. Use plain English commands to interact with the Injective network!",
+    "",
+    "## Install",
+    "",
+    "```bash",
+    "npx skills add InjectiveLabs/agent-skills --skill injective-cli",
+    "```"
+  ].join("\n"),
+  markdownBody: [
+    "# Injective CLI Skill",
+    "",
+    "Gives your agent direct access to the `injectived` binary for querying and transacting on-chain. Handles wallet configuration, endpoint selection, and gas management so the agent can focus on execution. Use plain English commands to interact with the Injective network.",
+    "",
+    "## Install",
+    "",
+    "```bash",
+    "npx skills add InjectiveLabs/agent-skills --skill injective-cli",
+    "```"
+  ].join("\n"),
+  githubPath: "InjectiveLabs/agent-skills/skills/injective-cli",
+  githubStars: 1
+};
+
 function hasDownloads(skill: Skill): boolean {
   return (getSkillDownloads(skill) ?? 0) > 0;
 }
@@ -65,17 +110,23 @@ function takeShowcaseSkills(limit: number, ...groups: Skill[][]): Skill[] {
 
 export function pickDailyRecommendations(skills: Skill[], limit = 5): Skill[] {
   const selectedCategories = new Set<string>();
-
-  return uniqueBySlug(
+  const ranked = uniqueBySlug(
     [...skills]
       .filter((skill) => !skill.trustLabels.includes("Needs Review"))
       .sort((a, b) => editorialReadiness(b) - editorialReadiness(a))
-  ).filter((skill) => {
-    if (selectedCategories.size >= limit) return false;
-    if (selectedCategories.has(skill.category)) return false;
+  );
+
+  const output: Skill[] = [INJECTIVE_CLI_SHOWCASE_SKILL];
+  selectedCategories.add(INJECTIVE_CLI_SHOWCASE_SKILL.category);
+
+  for (const skill of ranked) {
+    if (output.length >= limit) break;
+    if (selectedCategories.has(skill.category)) continue;
     selectedCategories.add(skill.category);
-    return true;
-  }).slice(0, limit);
+    output.push(skill);
+  }
+
+  return output.slice(0, limit);
 }
 
 export function pickTrendingSkills(skills: Skill[], limit = 8): Skill[] {

@@ -11,6 +11,7 @@ export interface Skill {
   id: string;
   slug: string;
   registrySlug?: string;
+  detailHref?: string;
   name: string;
   summary: string;
   description: string;
