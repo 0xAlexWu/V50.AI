@@ -34,23 +34,7 @@ export default async function AboutPage() {
 
   return (
     <div className="space-y-8">
-      <SectionHeader
-        title={messages.about.title}
-        description={
-          <>
-            {messages.about.desc} by{" "}
-            <a
-              href="https://x.com/0xAlexWu"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-accent underline underline-offset-4"
-            >
-              @0xAlexWu
-            </a>
-            .
-          </>
-        }
-      />
+      <SectionHeader title={messages.about.title} />
 
       <section className="surface-card space-y-4 rounded-[1.7rem] p-6">
         <h2 className="font-[var(--font-serif)] text-2xl text-slate-900">{messages.about.whyTitle}</h2>

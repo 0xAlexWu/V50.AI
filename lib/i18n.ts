@@ -300,7 +300,7 @@ const en: Messages = {
   },
   about: {
     title: "About V50.ai",
-    desc: "V50.ai is a launch-ready storefront for discovering real OpenClaw skills with source transparency and trust-aware framing.",
+    desc: "",
     whyTitle: "Why V50.ai exists",
     whyBody:
       "Open skill ecosystems grow quickly, but discoverability and trust context often lag behind. V50.ai indexes public skill records and presents them in a clear, editorial storefront designed for fast review.",
